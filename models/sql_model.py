@@ -87,26 +87,6 @@ class SQLGenerator(object):
                 j = j + 1
             i = i + 1
 
-    def get_sql(self):
-        for column in self.columns:
-            # reset the entities_parsed array for new column
-            self.entities_parsed = []
-            column_parent_entity_found, model_name, columnName = self.find_entity(column)
-            if column_parent_entity_found == True:
-                if len([ecm for ecm in self.entity_column_mapping if ecm[0] == model_name]) == 1:
-                    ecm = next(ecm for ecm in self.entity_column_mapping if ecm[0] == model_name)
-                    ecm[1].append(columnName)
-                else:
-                    self.entity_column_mapping.append((model_name, [columnName]))
-            else:
-                print("Column " + column.name + " not found.. ignoring column")
-        # build the sql
-        self.find_relationships()
-        self.find_conditions()
-        self.find_select()
-        self.build_query()
-
-
     def find_column(self, column, entityName):
         column_parent_entity_found = False
         # get the db model for entity
@@ -146,3 +126,23 @@ class SQLGenerator(object):
                 return (column_parent_entity_found, model_name, columnName)
 
         return (column_parent_entity_found, None, None)
+
+    def get_sql(self):
+        for column in self.columns:
+            # reset the entities_parsed array for new column
+            self.entities_parsed = []
+            column_parent_entity_found, model_name, columnName = self.find_entity(column)
+            if column_parent_entity_found == True:
+                if len([ecm for ecm in self.entity_column_mapping if ecm[0] == model_name]) == 1:
+                    ecm = next(ecm for ecm in self.entity_column_mapping if ecm[0] == model_name)
+                    ecm[1].append(columnName)
+                else:
+                    self.entity_column_mapping.append((model_name, [columnName]))
+            else:
+                print("Column " + column.name + " not found.. ignoring column")
+        # build the sql
+        self.find_relationships()
+        self.find_conditions()
+        self.find_select()
+        self.build_query()
+
