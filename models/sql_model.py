@@ -4,8 +4,25 @@ class SQLGenerator(object):
         self.entities = entities
         self.db_model = db_model
         self.entity_column_mapping = []
+        self.joins = []
         self.entities_parsed = []
     
+    def find_relationships(self):
+        i = 0
+        j = 0
+
+        while i < len(self.entity_column_mapping):
+            j = i + 1
+            
+            while j < len(self.entity_column_mapping):
+                print("building")
+
+                j = j + 1
+            
+            i = i + 1
+                
+
+
     def get_sql(self):
         for column in self.columns:
             # reset the entities_parsed array for new column
@@ -19,6 +36,8 @@ class SQLGenerator(object):
                     self.entity_column_mapping.append((model_name, [columnName]))
             else:
                 print("Column " + column.name + " not found.. ignoring column")
+        # build the sql
+        self.find_relationships()
 
 
     def find_column(self, column, entityName):

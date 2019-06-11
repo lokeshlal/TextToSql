@@ -159,13 +159,8 @@ for token in docLemmatized:
                             span_token_child = next(itertools.islice(span_token.children, 1))
                             matched_column.value_ = get_value(span_token_child.text, matched_column.type_)
                          
-# final representation of columns and entities, including
-# max, min, average, conditions
+# final representation of columns (matched_columns) and entities (matched_entities), including max, min, average, conditions
 # now next is to build the SQL query generator
-# print([(mc.name, mc.value_, mc.condition, mc.isMax) for mc in matched_columns])
-# print([(me.name, me.isMax, me.isAverage, me.isMin) for me in matched_entities])
-
-# build the sql using sql generator
 sql_generator = SQLGenerator(matched_entities, matched_columns, db_model)
 sql_generator.get_sql()
 print(*[(ecm[0], [(ecm_child.name, ecm_child.type_, ecm_child.value_, ecm_child.condition) for ecm_child in ecm[1]]) for ecm in sql_generator.entity_column_mapping], sep="\n")

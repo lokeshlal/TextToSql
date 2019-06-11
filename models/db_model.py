@@ -38,9 +38,9 @@ class DBModel(object):
 
         self.entities.append(entity_student_mark)
 
-        self.relationships.append(Relationship(entity_student, entity_student_mark, "id", "student_id"))
+        self.relationships.append(Relationship("student", "student_mark", "id", "student_id"))
 
-        self.relationships.append(Relationship(entity_subject, entity_student_mark, "id", "subject_id"))
+        self.relationships.append(Relationship("subject", "student_mark", "id", "subject_id"))
 
         self.entity_graph.append(("student", ["student_mark"]))
         self.entity_graph.append(("student_mark", ["student", "subject"]))
