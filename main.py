@@ -3,7 +3,6 @@ import spacy
 import itertools
 import re
 from spacy.matcher import PhraseMatcher
-from extract_relationshion import extract_currency_relations
 from models.columns import Columns
 from models.entities import Entities
 from models.db_model import DBModel
