@@ -20,7 +20,7 @@ nlp = spacy.load('en_core_web_sm')
 
 # exceptions
 exceptions = ["between", "more", "than"]
-lemma_exceptions = ["greater", "than", "more"]
+lemma_exceptions = ["greater", "less", "than", "more"]
 
 # creating phrase matcher to get the entities and columns
 # build this using above entities and columns list
@@ -36,9 +36,7 @@ sentence = u'students in class 10 and marks less than 30 in english subject in y
 # sentence = u'student with maximum marks in english subject in class 10'
 # sentence = u'students in class 10 with 30 marks in english subject'
 # sentence = u'students in class 10 and mark in english subject is 30'
-# sentence = u'students in class 10 and marks less than 30 in english subject'
-# sentence = u'city with employee with maximum average salary'
-# sentence = u'city with maximum employees with experience more than 10 years'
+sentence = u'students in class 10 and marks less than 30 in english subject'
 
 # remove the stop words
 new_sentence = ""
@@ -104,6 +102,8 @@ for token in docLemmatized:
                 if "sum" in span:
                     matched_entity.isCount = True
         
+        matched_entities = [me for me in matched_entities if me.name != token.text.upper()]
+        matched_entities.append(matched_entity)
     
 
     # check of token matches any of the matched column
@@ -113,8 +113,8 @@ for token in docLemmatized:
         contextual_span = get_neighbour_tokens(token)
         span_ranges = re.split(" in |in | in| and |and | and", contextual_span)
         for span in span_ranges:
-            matched_column.condition = "="
             if matched_column.name.lower() in span:
+                matched_column.condition = "="
                 if "average" in span:
                     matched_column.isAverage = True
                 if "avg" in span:
@@ -138,6 +138,7 @@ for token in docLemmatized:
                 if "sum" in span:
                     matched_column.isCount = True
                 
+                print(matched_column.condition, matched_column.name)
                 trimmed_span = span \
                     .replace("average", "") \
                     .replace("maximum", "") \
@@ -150,15 +151,19 @@ for token in docLemmatized:
                 trimmed_span = ' '.join(trimmed_span.split())
                 
                 doc_span = nlp(trimmed_span)
-                
+
                 for span_token in doc_span:
                     if span_token.text.lower() == matched_column.name.lower():
                         if get_token_child_len(span_token) > 0:
                             span_token_child = next(itertools.islice(span_token.children, 1))
                             matched_column.value_ = get_value(span_token_child.text, matched_column.type_)
+
+        matched_columns = [mc for mc in matched_columns if mc.name != token.text.upper()]
+        matched_columns.append(matched_column)
                          
 # final representation of columns (matched_columns) and entities (matched_entities), including max, min, average, conditions
 # now next is to build the SQL query generator
+print([(mc.name, mc.condition) for mc in matched_columns])
 sql_generator = SQLGenerator(matched_entities, matched_columns, db_model)
 sql_generator.get_sql()
 # print(*[(ecm[0], [(ecm_child.name, ecm_child.type_, ecm_child.value_, ecm_child.condition) for ecm_child in ecm[1]]) for ecm in sql_generator.entity_column_mapping], sep="\n")
