@@ -5,23 +5,87 @@ class SQLGenerator(object):
         self.db_model = db_model
         self.entity_column_mapping = []
         self.joins = []
+        self.conditions = []
+        self.select = []
+        self.query = ""
         self.entities_parsed = []
-    
+
+    def sortSecond(self, join_comb): 
+        return join_comb[0] 
+
+    def build_query(self):
+
+        from_clause = ""
+        if len(self.entity_column_mapping) == 1:
+            from_clause = self.entity_column_mapping[0][0]
+        elif len(self.entity_column_mapping) > 1:
+            from_clause = ""
+            join_index = 0
+            entity_included_in_join = []
+            for join in self.joins:
+                if join_index == 0:
+                    from_clause = from_clause + join[0] + " JOIN " + join[1] + " ON " + join[0] + "." + join[2] + "=" + join[1] + "." + join[3]
+                    entity_included_in_join.append(join[0])
+                    entity_included_in_join.append(join[1])
+                else:
+                    if join[0] in entity_included_in_join:
+                        from_clause = from_clause + " " + " JOIN " + join[1] + " ON " + join[0] + "." + join[2] + " = " + join[1] + "." + join[3]
+                    else:
+                        from_clause = from_clause + " JOIN " + join[0] + " ON " + join[0] + "." + join[2] + " = " + join[1] + "." + join[3]
+
+                join_index = join_index + 1 
+
+        self.query = "SELECT " + \
+            ", ".join([col[0] + "." + col[1] for col in self.select]) + " " + \
+            " From " + \
+            from_clause + \
+            " Where " + \
+            " and ".join([cond[0] + "." + cond[1] + " " + cond[2] + " " + cond[3] for cond in self.conditions])
+            
+            
+
+    def find_select(self):
+        for ecm in self.entity_column_mapping:
+            # column mapping within entity
+            for cm in ecm[1]:
+                if cm.condition is None and cm.value_ is None:
+                    # entity, column name, [Avg, Min, Max, Sum, Count]
+                    self.select.append((ecm[0], cm.name.lower(), None))
+
+        for ent in self.entities:
+            # TODO... add max, min..etc case
+            # get default column from db_model
+            db_model_ent = next(e for e in self.db_model.entities if e.name.lower() == ent.name.lower())
+            self.select.append((ent.name.lower(), db_model_ent.defaultColumn, None))
+
+    def find_conditions(self):
+        # entity column mapping
+        for ecm in self.entity_column_mapping:
+            # column mapping within entity
+            for cm in ecm[1]:
+                if cm.condition is not None and cm.value_ is not None:
+                    val = cm.value_
+                    if cm.type_ == "string":
+                        val = "\"" + val + "\""
+                    self.conditions.append((ecm[0], cm.name.lower(), cm.condition, str(val)))
+
     def find_relationships(self):
         i = 0
         j = 0
-
         while i < len(self.entity_column_mapping):
             j = i + 1
-            
+            base_entity = self.entity_column_mapping[i][0]
             while j < len(self.entity_column_mapping):
-                print("building")
+                join_entity = self.entity_column_mapping[j][0]
+                if len([rel for rel in self.db_model.relationships if ((rel.entity1 == base_entity and rel.entity2 == join_entity) or (rel.entity2 == base_entity and rel.entity1 == join_entity))]) == 1:
+                    rel = next(rel for rel in self.db_model.relationships if ((rel.entity1 == base_entity and rel.entity2 == join_entity) or (rel.entity2 == base_entity and rel.entity1 == join_entity)))
 
+                    if rel.entity1 == base_entity:
+                        self.joins.append((base_entity, join_entity, rel.column1, rel.column2))
+                    else:
+                        self.joins.append((join_entity, base_entity, rel.column1, rel.column2))
                 j = j + 1
-            
             i = i + 1
-                
-
 
     def get_sql(self):
         for column in self.columns:
@@ -38,6 +102,9 @@ class SQLGenerator(object):
                 print("Column " + column.name + " not found.. ignoring column")
         # build the sql
         self.find_relationships()
+        self.find_conditions()
+        self.find_select()
+        self.build_query()
 
 
     def find_column(self, column, entityName):

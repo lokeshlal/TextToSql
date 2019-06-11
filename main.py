@@ -163,4 +163,6 @@ for token in docLemmatized:
 # now next is to build the SQL query generator
 sql_generator = SQLGenerator(matched_entities, matched_columns, db_model)
 sql_generator.get_sql()
-print(*[(ecm[0], [(ecm_child.name, ecm_child.type_, ecm_child.value_, ecm_child.condition) for ecm_child in ecm[1]]) for ecm in sql_generator.entity_column_mapping], sep="\n")
+# print(*[(ecm[0], [(ecm_child.name, ecm_child.type_, ecm_child.value_, ecm_child.condition) for ecm_child in ecm[1]]) for ecm in sql_generator.entity_column_mapping], sep="\n")
+
+print(sql_generator.query)
