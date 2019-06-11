@@ -32,9 +32,9 @@ matcher = db_model.get_matcher(matcher, nlp);
 # test sentence
 # sentence = u'Show all students whose marks greater than 30'
 # sentence = u'students in class 10 and mark 30 in english subject'
-sentence = u'students in class 10 and average marks less than 30 in english subject in year greater than 2018'
+sentence = u'students in class 10 and marks less than 30 in english subject in year greater than 2018'
 # sentence = u'students in class 10 and marks less than 30 in english subject'
-sentence = u'student with maximum marks in english subject in class 10'
+# sentence = u'student with maximum marks in english subject in class 10'
 # sentence = u'students in class 10 with 30 marks in english subject'
 # sentence = u'students in class 10 and mark in english subject is 30'
 # sentence = u'students in class 10 and marks less than 30 in english subject'
