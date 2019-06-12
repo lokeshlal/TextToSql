@@ -19,7 +19,7 @@ def get_token_child_len(token):
 
 def get_neighbour_tokens(token):
     span = ""
-    for i in range(-2, 6):
+    for i in range(-4, 6):
         try:
             span += token.nbor(i).text + " "
         except IndexError:

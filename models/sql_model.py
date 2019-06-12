@@ -9,12 +9,16 @@ class SQLGenerator(object):
         self.select = []
         self.query = ""
         self.entities_parsed = []
+        self.isMaxRequired = ""
+        self.isMinRequired = ""
+        self.isAverage = ""
 
     def sortSecond(self, join_comb): 
         return join_comb[0] 
 
     def build_query(self):
 
+        # build the from_clause
         from_clause = ""
         if len(self.entity_column_mapping) == 1:
             from_clause = self.entity_column_mapping[0][0]
@@ -34,13 +38,45 @@ class SQLGenerator(object):
                         from_clause = from_clause + " JOIN " + join[0] + " ON " + join[0] + "." + join[2] + " = " + join[1] + "." + join[3]
 
                 join_index = join_index + 1 
+        # select clause
+        select_clause = ", ".join([col[0] + "." + col[1] for col in self.select])
+        # where clause
+        where_clause = " and ".join([cond[0] + "." + cond[1] + " " + cond[2] + " " + cond[3] for cond in self.conditions])
 
-        self.query = "SELECT " + \
-            ", ".join([col[0] + "." + col[1] for col in self.select]) + " " + \
-            " From " + \
-            from_clause + \
-            " Where " + \
-            " and ".join([cond[0] + "." + cond[1] + " " + cond[2] + " " + cond[3] for cond in self.conditions])
+        if self.isMaxRequired != "":
+            maxQuery = "SELECT " + \
+                "max(" + self.isMaxRequired + ") " + \
+                " From " + \
+                from_clause + \
+                " Where " + \
+                where_clause
+            self.query = "SELECT " + \
+                select_clause + " " + \
+                " From " + \
+                from_clause + \
+                " Where " + \
+                self.isMaxRequired + " = (" + maxQuery + ")"
+        elif self.isMinRequired != "":
+            minQuery = "SELECT " + \
+                "min(" + self.isMinRequired + ") " + \
+                " From " + \
+                from_clause + \
+                " Where " + \
+                where_clause
+            self.query = "SELECT " + \
+                select_clause + " " + \
+                " From " + \
+                from_clause + \
+                " Where " + \
+                self.isMinRequired + " = (" + minQuery + ")"
+        else:
+            # final query
+            self.query = "SELECT " + \
+                select_clause + " " + \
+                " From " + \
+                from_clause + \
+                " Where " + \
+                where_clause
             
             
 
@@ -48,9 +84,19 @@ class SQLGenerator(object):
         for ecm in self.entity_column_mapping:
             # column mapping within entity
             for cm in ecm[1]:
-                if cm.condition is None and cm.value_ is None:
+                # if cm.condition is None and cm.value_ is None:
+                print(cm.name + " -- " + str(cm.value_))
+                if cm.value_ is None or cm.value_ == "NoValue":
                     # entity, column name, [Avg, Min, Max, Sum, Count]
                     self.select.append((ecm[0], cm.name.lower(), None))
+                    # add the where clause here for min, max and sum conditions
+                    if cm.isMax == True:
+                        self.isMaxRequired = ecm[0] + "." + cm.name.lower()
+                    elif cm.isMin == True:
+                        self.isMinRequired = ecm[0] + "." + cm.name.lower()
+                    elif cm.isAverage == True:
+                        self.isAverage = ecm[0] + "." + cm.name.lower()
+
 
         for ent in self.entities:
             # TODO... add max, min..etc case
@@ -63,7 +109,7 @@ class SQLGenerator(object):
         for ecm in self.entity_column_mapping:
             # column mapping within entity
             for cm in ecm[1]:
-                if cm.condition is not None and cm.value_ is not None:
+                if cm.condition is not None and cm.value_ is not None and cm.value_ != "NoValue":
                     val = cm.value_
                     if cm.type_ == "string":
                         val = "\"" + val + "\""
