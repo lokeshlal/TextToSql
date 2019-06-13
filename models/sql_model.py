@@ -58,12 +58,15 @@ class SQLGenerator(object):
 
         # maximum case
         if self.isMaxRequired != "":
+            max_sub_query_where_clause = self.get_where_clause("2")
+            max_sub_query_from_clause = self.get_from_clause("2")
+
             maxQuery = "SELECT " + \
-                "max(" + self.isMaxRequiredEntity + "1." + self.isMaxRequired + ") " + \
+                "max(" + self.isMaxRequiredEntity + "2." + self.isMaxRequired + ") " + \
                 " From " + \
-                from_clause + \
+                max_sub_query_from_clause + \
                 " Where " + \
-                where_clause
+                max_sub_query_where_clause
             self.query = "SELECT " + \
                 select_clause + " " + \
                 " From " + \
@@ -72,12 +75,15 @@ class SQLGenerator(object):
                 self.isMaxRequiredEntity + "1." + self.isMaxRequired + " = (" + maxQuery + ")"
         # minimum case
         elif self.isMinRequired != "":
+            min_sub_query_where_clause = self.get_where_clause("2")
+            min_sub_query_from_clause = self.get_from_clause("2")
+
             minQuery = "SELECT " + \
-                "min(" + self.isMinRequiredEntity + "1." + self.isMinRequired + ") " + \
+                "min(" + self.isMinRequiredEntity + "2." + self.isMinRequired + ") " + \
                 " From " + \
-                from_clause + \
+                min_sub_query_from_clause + \
                 " Where " + \
-                where_clause
+                min_sub_query_where_clause
             self.query = "SELECT " + \
                 select_clause + " " + \
                 " From " + \

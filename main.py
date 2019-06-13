@@ -168,7 +168,9 @@ for token in docLemmatized:
                          
 # final representation of columns (matched_columns) and entities (matched_entities), including max, min, average, conditions
 # now next is to build the SQL query generator
+
 # print("\n".join([(mc.name + " -- " + str(mc.value_) + " -- " + " condition : " + str(mc.condition) + " -- " + " isMax : " + str(mc.isMax) + " -- " + " isMin : " + str(mc.isMin) + " -- " + " isAverage : " + str(mc.isAverage)) for mc in matched_columns]))
+
 sql_generator = SQLGenerator(matched_entities, matched_columns, db_model)
 sql_generator.get_sql()
 
