@@ -1,5 +1,5 @@
 class Entities(object):
-    def __init__(self, name=None, defaultColumn=None, isAverage=None, isMax=None, isMin=None, isCount=None, columns=None, primaryKey=None):
+    def __init__(self, name=None, defaultColumn=None, primaryKey=None, isAverage=None, isMax=None, isMin=None, isCount=None, columns=None):
         self.name = name
         self.isAverage = isAverage
         self.isMax = isMax

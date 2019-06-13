@@ -10,14 +10,16 @@ class SQLGenerator(object):
         self.query = ""
         self.entities_parsed = []
         self.isMaxRequired = ""
+        self.isMaxRequiredEntity = ""
         self.isMinRequired = ""
+        self.isMinRequiredEntity = ""
         self.isAverage = ""
+        self.isAverageEntity = ""
 
     def sortSecond(self, join_comb): 
         return join_comb[0] 
 
-    def build_query(self):
-
+    def get_from_clause(self, level):
         # build the from_clause
         from_clause = ""
         if len(self.entity_column_mapping) == 1:
@@ -28,24 +30,36 @@ class SQLGenerator(object):
             entity_included_in_join = []
             for join in self.joins:
                 if join_index == 0:
-                    from_clause = from_clause + join[0] + " JOIN " + join[1] + " ON " + join[0] + "." + join[2] + "=" + join[1] + "." + join[3]
+                    from_clause = from_clause + join[0] + " " + join[0] + level + " JOIN " + join[1] + " " + join[1] + level + " ON " + join[0] + level + "." + join[2] + "=" + join[1] + level + "." + join[3]
                     entity_included_in_join.append(join[0])
                     entity_included_in_join.append(join[1])
                 else:
                     if join[0] in entity_included_in_join:
-                        from_clause = from_clause + " " + " JOIN " + join[1] + " ON " + join[0] + "." + join[2] + " = " + join[1] + "." + join[3]
+                        from_clause = from_clause + " " + " JOIN " + join[1] + " " + join[1] + level + " ON " + join[0]+ level + "." + join[2] + " = " + join[1] + level + "." + join[3]
                     else:
-                        from_clause = from_clause + " JOIN " + join[0] + " ON " + join[0] + "." + join[2] + " = " + join[1] + "." + join[3]
-
+                        from_clause = from_clause + " JOIN " + join[0] + " " + join[0] + level + " ON " + join[0] + level + "." + join[2] + " = " + join[1] + level + "." + join[3]
                 join_index = join_index + 1 
-        # select clause
-        select_clause = ", ".join([col[0] + "." + col[1] for col in self.select])
-        # where clause
-        where_clause = " and ".join([cond[0] + "." + cond[1] + " " + cond[2] + " " + cond[3] for cond in self.conditions])
+        return from_clause
 
+    def get_where_clause(self, level):
+        return " and ".join([cond[0] + level + "." + cond[1] + " " + cond[2] + " " + cond[3] for cond in self.conditions])
+
+    def get_select_clause(self, level):
+        return ", ".join([col[0] + level + "." + col[1] for col in self.select])
+
+
+    def build_query(self):
+        # from clause
+        from_clause = self.get_from_clause("1")
+        # select clause
+        select_clause = self.get_select_clause("1")
+        # where clause
+        where_clause = self.get_where_clause("1")
+
+        # maximum case
         if self.isMaxRequired != "":
             maxQuery = "SELECT " + \
-                "max(" + self.isMaxRequired + ") " + \
+                "max(" + self.isMaxRequiredEntity + "1." + self.isMaxRequired + ") " + \
                 " From " + \
                 from_clause + \
                 " Where " + \
@@ -55,10 +69,11 @@ class SQLGenerator(object):
                 " From " + \
                 from_clause + \
                 " Where " + \
-                self.isMaxRequired + " = (" + maxQuery + ")"
+                self.isMaxRequiredEntity + "1." + self.isMaxRequired + " = (" + maxQuery + ")"
+        # minimum case
         elif self.isMinRequired != "":
             minQuery = "SELECT " + \
-                "min(" + self.isMinRequired + ") " + \
+                "min(" + self.isMinRequiredEntity + "1." + self.isMinRequired + ") " + \
                 " From " + \
                 from_clause + \
                 " Where " + \
@@ -68,10 +83,36 @@ class SQLGenerator(object):
                 " From " + \
                 from_clause + \
                 " Where " + \
-                self.isMinRequired + " = (" + minQuery + ")"
+                self.isMinRequiredEntity + "1." + self.isMinRequired + " = (" + minQuery + ")"
+        # average case
+        elif self.isAverage != "":
+            avg_sub_query_where_clause = self.get_where_clause("2")
+            avg_sub_query_from_clause = self.get_from_clause("2")
+
+            # find the identifier column of the self.isAverageEntity entity
+            db_model_ent = next(e for e in self.db_model.entities if e.name.lower() == self.isAverageEntity.lower())
+            # db_model_ent.primaryKey
+            if avg_sub_query_where_clause == "":
+                avg_sub_query_where_clause = self.isAverageEntity + "2." + db_model_ent.primaryKey + "=" + self.isAverageEntity + "1." + db_model_ent.primaryKey
+            else:
+                avg_sub_query_where_clause = avg_sub_query_where_clause + " and " + self.isAverageEntity + "2." + db_model_ent.primaryKey + "=" + self.isAverageEntity + "1." + db_model_ent.primaryKey
+
+            avg_sub_query = "SELECT " + \
+                "avg(" + self.isAverageEntity + "2." + self.isAverage + ") " + \
+                " From " + \
+                avg_sub_query_from_clause + \
+                " Where " + \
+                avg_sub_query_where_clause
+
+            self.query = "SELECT distinct " + \
+                select_clause + ", (" + avg_sub_query + ") as avg_" + self.isAverage + " " + \
+                " From " + \
+                from_clause + \
+                " Where " + \
+                where_clause
         else:
             # final query
-            self.query = "SELECT " + \
+            self.query = "SELECT distinct " + \
                 select_clause + " " + \
                 " From " + \
                 from_clause + \
@@ -85,17 +126,21 @@ class SQLGenerator(object):
             # column mapping within entity
             for cm in ecm[1]:
                 # if cm.condition is None and cm.value_ is None:
-                print(cm.name + " -- " + str(cm.value_))
                 if cm.value_ is None or cm.value_ == "NoValue":
                     # entity, column name, [Avg, Min, Max, Sum, Count]
-                    self.select.append((ecm[0], cm.name.lower(), None))
                     # add the where clause here for min, max and sum conditions
                     if cm.isMax == True:
-                        self.isMaxRequired = ecm[0] + "." + cm.name.lower()
+                        self.isMaxRequired = cm.name.lower()
+                        self.isMaxRequiredEntity = ecm[0]
                     elif cm.isMin == True:
-                        self.isMinRequired = ecm[0] + "." + cm.name.lower()
+                        self.isMinRequired = cm.name.lower()
+                        self.isMinRequiredEntity = ecm[0]
                     elif cm.isAverage == True:
-                        self.isAverage = ecm[0] + "." + cm.name.lower()
+                        self.isAverage = cm.name.lower()
+                        self.isAverageEntity = ecm[0]
+                    else:
+                        self.select.append((ecm[0], cm.name.lower(), None))
+                    
 
 
         for ent in self.entities:
