@@ -15,6 +15,10 @@ class SQLGenerator(object):
         self.isMinRequiredEntity = ""
         self.isAverage = ""
         self.isAverageEntity = ""
+        self.isCount = ""
+        self.isCountEntity = ""
+        self.isSum = ""
+        self.isSumEntity = ""
 
     def sortSecond(self, join_comb): 
         return join_comb[0] 
@@ -56,6 +60,8 @@ class SQLGenerator(object):
         # where clause
         where_clause = self.get_where_clause("1")
 
+        # refactoring required
+        # ***************
         # maximum case
         if self.isMaxRequired != "":
             max_sub_query_where_clause = self.get_where_clause("2")
@@ -116,6 +122,56 @@ class SQLGenerator(object):
                 from_clause + \
                 " Where " + \
                 where_clause
+        elif self.isCount != "":
+            cnt_sub_query_where_clause = self.get_where_clause("2")
+            cnt_sub_query_from_clause = self.get_from_clause("2")
+
+            # find the identifier column of the self.isAverageEntity entity
+            db_model_ent = next(e for e in self.db_model.entities if e.name.lower() == self.isCountEntity.lower())
+            # db_model_ent.primaryKey
+            if cnt_sub_query_where_clause == "":
+                cnt_sub_query_where_clause = self.isCountEntity + "2." + db_model_ent.primaryKey + "=" + self.isCountEntity + "1." + db_model_ent.primaryKey
+            else:
+                cnt_sub_query_where_clause = cnt_sub_query_where_clause + " and " + self.isCountEntity + "2." + db_model_ent.primaryKey + "=" + self.isCountEntity + "1." + db_model_ent.primaryKey
+
+            cnt_sub_query = "SELECT " + \
+                "avg(" + self.isCountEntity + "2." + self.isCount + ") " + \
+                " From " + \
+                cnt_sub_query_from_clause + \
+                " Where " + \
+                cnt_sub_query_where_clause
+
+            self.query = "SELECT distinct " + \
+                select_clause + ", (" + cnt_sub_query + ") as avg_" + self.isCount + " " + \
+                " From " + \
+                from_clause + \
+                " Where " + \
+                where_clause
+        elif self.isSum != "":
+            sum_sub_query_where_clause = self.get_where_clause("2")
+            sum_sub_query_from_clause = self.get_from_clause("2")
+
+            # find the identifier column of the self.isAverageEntity entity
+            db_model_ent = next(e for e in self.db_model.entities if e.name.lower() == self.isSumEntity.lower())
+            # db_model_ent.primaryKey
+            if sum_sub_query_where_clause == "":
+                sum_sub_query_where_clause = self.isSumEntity + "2." + db_model_ent.primaryKey + "=" + self.isSumEntity + "1." + db_model_ent.primaryKey
+            else:
+                sum_sub_query_where_clause = sum_sub_query_where_clause + " and " + self.isSumEntity + "2." + db_model_ent.primaryKey + "=" + self.isSumEntity + "1." + db_model_ent.primaryKey
+
+            sum_sub_query = "SELECT " + \
+                "avg(" + self.isSumEntity + "2." + self.isSum + ") " + \
+                " From " + \
+                sum_sub_query_from_clause + \
+                " Where " + \
+                sum_sub_query_where_clause
+
+            self.query = "SELECT distinct " + \
+                select_clause + ", (" + sum_sub_query + ") as avg_" + self.isSum + " " + \
+                " From " + \
+                from_clause + \
+                " Where " + \
+                where_clause
         else:
             # final query
             self.query = "SELECT distinct " + \
@@ -124,8 +180,6 @@ class SQLGenerator(object):
                 from_clause + \
                 " Where " + \
                 where_clause
-            
-            
 
     def find_select(self):
         for ecm in self.entity_column_mapping:
@@ -144,8 +198,16 @@ class SQLGenerator(object):
                     elif cm.isAverage == True:
                         self.isAverage = cm.name.lower()
                         self.isAverageEntity = ecm[0]
+                    elif cm.isCount == True:
+                        self.isCount = cm.name.lower()
+                        self.isCountEntity = ecm[0]
+                    elif cm.isSum == True:
+                        self.isSum = cm.name.lower()
+                        self.isSumEntity = ecm[0]
                     else:
-                        self.select.append((ecm[0], cm.name.lower(), None))
+                        # check for duplicates
+                        if len([sel for sel in self.select if sel[0].lower() == ecm[0].lower() and sel[1].lower() == cm.name.lower()]) == 0:
+                            self.select.append((ecm[0], cm.name.lower(), None))
                     
 
 
@@ -153,7 +215,9 @@ class SQLGenerator(object):
             # TODO... add max, min..etc case
             # get default column from db_model
             db_model_ent = next(e for e in self.db_model.entities if e.name.lower() == ent.name.lower())
-            self.select.append((ent.name.lower(), db_model_ent.defaultColumn, None))
+            # check for duplicates
+            if len([sel for sel in self.select if sel[0].lower() == ent.name.lower() and sel[1].lower() == db_model_ent.defaultColumn.lower()]) == 0:
+                self.select.append((ent.name.lower(), db_model_ent.defaultColumn, None))
 
     def find_conditions(self):
         # entity column mapping

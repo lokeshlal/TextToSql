@@ -34,11 +34,15 @@ matcher = db_model.get_matcher(matcher, nlp);
 # sentence = u'students in class 10 and mark 30 in english subject'
 # sentence = u'students in class 10 and marks less than 30 in english subject in year greater than 2018'
 # sentence = u'students in class 10 and marks less than 30 in english subject'
-sentence = u'average marks of students in english subject in class 10'
-# sentence = u'student with maximum marks in english subject in class 10'
+# sentence = u'average marks of students in english subject in class 10'
+sentence = u'student with maximum marks in english subject in class 10'
 # sentence = u'students in class 10 with 30 marks in english subject'
 # sentence = u'students in class 10 and mark in english subject is 30'
 # sentence = u'students in class 10 and marks less than 30 in english subject'
+
+# basic string replacements
+sentence = sentence.replace("total number", "count")
+sentence = sentence.replace("total", "sum")
 
 # remove the stop words
 new_sentence = ""
@@ -102,9 +106,9 @@ for token in docLemmatized:
                 if "count" in span:
                     matched_entity.isCount = True
                 if "sum" in span:
-                    matched_entity.isCount = True
+                    matched_entity.isSum = True
                 if "total" in span:
-                    matched_entity.isCount = True
+                    matched_entity.isSum = True
                 
         matched_entities = [me for me in matched_entities if me.name != token.text.upper()]
         matched_entities.append(matched_entity)
@@ -140,9 +144,9 @@ for token in docLemmatized:
                 if "count" in span:
                     matched_column.isCount = True
                 if "sum" in span:
-                    matched_column.isCount = True
+                    matched_column.isSum = True
                 if "total" in span:
-                    matched_column.isCount = True
+                    matched_column.isSum = True
                 
                 trimmed_span = span \
                     .replace("average", "") \
