@@ -92,7 +92,7 @@ class SQLGenerator(object):
         type_sub_query_where_clause = self.get_where_clause("2")
         type_sub_query_from_clause = self.get_from_clause("2")
 
-        # find the identifier column of the self.isAverageEntity entity
+        # find the identifier column of the entity in parameter
         db_model_ent = next(e for e in self.db_model.entities if e.name.lower() == entity.lower())
         # db_model_ent.primaryKey
         if type_sub_query_where_clause == "":
