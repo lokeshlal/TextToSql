@@ -51,8 +51,10 @@ class SQLGenerator(object):
     def get_select_clause(self, level):
         return ", ".join([col[0] + level + "." + col[1] for col in self.select])
 
-
-    def build_query(self):
+    def correlated_sub_query_in_where(self, 
+        column,
+        entity,
+        type_): # type = min, max
         # from clause
         from_clause = self.get_from_clause("1")
         # select clause
@@ -60,120 +62,85 @@ class SQLGenerator(object):
         # where clause
         where_clause = self.get_where_clause("1")
 
-        # refactoring required
-        # ***************
+        type_sub_query_where_clause = self.get_where_clause("2")
+        type_sub_query_from_clause = self.get_from_clause("2")
+
+        typeQuery = "SELECT " + \
+            type_ + "(" + entity + "2." + column + ") " + \
+            " From " + \
+            type_sub_query_from_clause + \
+            " Where " + \
+            type_sub_query_where_clause
+        self.query = "SELECT " + \
+            select_clause + " " + \
+            " From " + \
+            from_clause + \
+            " Where " + \
+            entity + "1." + column + " = (" + typeQuery + ")"
+
+    def correlated_sub_query_in_select(self, 
+        column,
+        entity,
+        type_): # type = avg, sum, count
+        # from clause
+        from_clause = self.get_from_clause("1")
+        # select clause
+        select_clause = self.get_select_clause("1")
+        # where clause
+        where_clause = self.get_where_clause("1")
+
+        type_sub_query_where_clause = self.get_where_clause("2")
+        type_sub_query_from_clause = self.get_from_clause("2")
+
+        # find the identifier column of the self.isAverageEntity entity
+        db_model_ent = next(e for e in self.db_model.entities if e.name.lower() == entity.lower())
+        # db_model_ent.primaryKey
+        if type_sub_query_where_clause == "":
+            type_sub_query_where_clause = entity + "2." + db_model_ent.primaryKey + "=" + entity + "1." + db_model_ent.primaryKey
+        else:
+            type_sub_query_where_clause = type_sub_query_where_clause + " and " + entity + "2." + db_model_ent.primaryKey + "=" + entity + "1." + db_model_ent.primaryKey
+
+        type_sub_query = "SELECT " + \
+            type_ + "(" + entity + "2." + column + ") " + \
+            " From " + \
+            type_sub_query_from_clause + \
+            " Where " + \
+            type_sub_query_where_clause
+
+        self.query = "SELECT distinct " + \
+            select_clause + ", (" + type_sub_query + ") as " + type_ + "_" + column + " " + \
+            " From " + \
+            from_clause + \
+            " Where " + \
+            where_clause
+
+
+    def build_query(self):
+
         # maximum case
         if self.isMaxRequired != "":
-            max_sub_query_where_clause = self.get_where_clause("2")
-            max_sub_query_from_clause = self.get_from_clause("2")
-
-            maxQuery = "SELECT " + \
-                "max(" + self.isMaxRequiredEntity + "2." + self.isMaxRequired + ") " + \
-                " From " + \
-                max_sub_query_from_clause + \
-                " Where " + \
-                max_sub_query_where_clause
-            self.query = "SELECT " + \
-                select_clause + " " + \
-                " From " + \
-                from_clause + \
-                " Where " + \
-                self.isMaxRequiredEntity + "1." + self.isMaxRequired + " = (" + maxQuery + ")"
+            self.correlated_sub_query_in_where(self.isMaxRequired, self.isMaxRequiredEntity,"max")
         # minimum case
         elif self.isMinRequired != "":
-            min_sub_query_where_clause = self.get_where_clause("2")
-            min_sub_query_from_clause = self.get_from_clause("2")
-
-            minQuery = "SELECT " + \
-                "min(" + self.isMinRequiredEntity + "2." + self.isMinRequired + ") " + \
-                " From " + \
-                min_sub_query_from_clause + \
-                " Where " + \
-                min_sub_query_where_clause
-            self.query = "SELECT " + \
-                select_clause + " " + \
-                " From " + \
-                from_clause + \
-                " Where " + \
-                self.isMinRequiredEntity + "1." + self.isMinRequired + " = (" + minQuery + ")"
+            self.correlated_sub_query_in_where(self.isMinRequired, self.isMinRequiredEntity,"min")
         # average case
         elif self.isAverage != "":
-            avg_sub_query_where_clause = self.get_where_clause("2")
-            avg_sub_query_from_clause = self.get_from_clause("2")
-
-            # find the identifier column of the self.isAverageEntity entity
-            db_model_ent = next(e for e in self.db_model.entities if e.name.lower() == self.isAverageEntity.lower())
-            # db_model_ent.primaryKey
-            if avg_sub_query_where_clause == "":
-                avg_sub_query_where_clause = self.isAverageEntity + "2." + db_model_ent.primaryKey + "=" + self.isAverageEntity + "1." + db_model_ent.primaryKey
-            else:
-                avg_sub_query_where_clause = avg_sub_query_where_clause + " and " + self.isAverageEntity + "2." + db_model_ent.primaryKey + "=" + self.isAverageEntity + "1." + db_model_ent.primaryKey
-
-            avg_sub_query = "SELECT " + \
-                "avg(" + self.isAverageEntity + "2." + self.isAverage + ") " + \
-                " From " + \
-                avg_sub_query_from_clause + \
-                " Where " + \
-                avg_sub_query_where_clause
-
-            self.query = "SELECT distinct " + \
-                select_clause + ", (" + avg_sub_query + ") as avg_" + self.isAverage + " " + \
-                " From " + \
-                from_clause + \
-                " Where " + \
-                where_clause
+            self.correlated_sub_query_in_select(self.isAverage, self.isAverageEntity, "avg")
+        # count
         elif self.isCount != "":
-            cnt_sub_query_where_clause = self.get_where_clause("2")
-            cnt_sub_query_from_clause = self.get_from_clause("2")
-
-            # find the identifier column of the self.isAverageEntity entity
-            db_model_ent = next(e for e in self.db_model.entities if e.name.lower() == self.isCountEntity.lower())
-            # db_model_ent.primaryKey
-            if cnt_sub_query_where_clause == "":
-                cnt_sub_query_where_clause = self.isCountEntity + "2." + db_model_ent.primaryKey + "=" + self.isCountEntity + "1." + db_model_ent.primaryKey
-            else:
-                cnt_sub_query_where_clause = cnt_sub_query_where_clause + " and " + self.isCountEntity + "2." + db_model_ent.primaryKey + "=" + self.isCountEntity + "1." + db_model_ent.primaryKey
-
-            cnt_sub_query = "SELECT " + \
-                "avg(" + self.isCountEntity + "2." + self.isCount + ") " + \
-                " From " + \
-                cnt_sub_query_from_clause + \
-                " Where " + \
-                cnt_sub_query_where_clause
-
-            self.query = "SELECT distinct " + \
-                select_clause + ", (" + cnt_sub_query + ") as avg_" + self.isCount + " " + \
-                " From " + \
-                from_clause + \
-                " Where " + \
-                where_clause
+            self.correlated_sub_query_in_select(self.isCount, self.isCountEntity, "count")
+        # sum
         elif self.isSum != "":
-            sum_sub_query_where_clause = self.get_where_clause("2")
-            sum_sub_query_from_clause = self.get_from_clause("2")
-
-            # find the identifier column of the self.isAverageEntity entity
-            db_model_ent = next(e for e in self.db_model.entities if e.name.lower() == self.isSumEntity.lower())
-            # db_model_ent.primaryKey
-            if sum_sub_query_where_clause == "":
-                sum_sub_query_where_clause = self.isSumEntity + "2." + db_model_ent.primaryKey + "=" + self.isSumEntity + "1." + db_model_ent.primaryKey
-            else:
-                sum_sub_query_where_clause = sum_sub_query_where_clause + " and " + self.isSumEntity + "2." + db_model_ent.primaryKey + "=" + self.isSumEntity + "1." + db_model_ent.primaryKey
-
-            sum_sub_query = "SELECT " + \
-                "avg(" + self.isSumEntity + "2." + self.isSum + ") " + \
-                " From " + \
-                sum_sub_query_from_clause + \
-                " Where " + \
-                sum_sub_query_where_clause
-
-            self.query = "SELECT distinct " + \
-                select_clause + ", (" + sum_sub_query + ") as avg_" + self.isSum + " " + \
-                " From " + \
-                from_clause + \
-                " Where " + \
-                where_clause
+            self.correlated_sub_query_in_select(self.isSum, self.isSumEntity, "sum")
+        # regular
         else:
-            # final query
+            # from clause
+            from_clause = self.get_from_clause("1")
+            # select clause
+            select_clause = self.get_select_clause("1")
+            # where clause
+            where_clause = self.get_where_clause("1")
+
             self.query = "SELECT distinct " + \
                 select_clause + " " + \
                 " From " + \
