@@ -14,3 +14,15 @@ Input text ->
     Buid the dictionary and pass the dictionary to SQL Generator ->
         Push the query to database and fetch the result
 ```
+
+### How to make this library works
+
+
+### What all this library supports as of now
+
+
+### References
+
+
+### Connect
+
