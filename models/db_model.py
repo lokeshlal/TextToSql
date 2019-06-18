@@ -1,3 +1,6 @@
+import pyodbc
+
+from configuration.config import Configuration
 from models.entities import Entities
 from models.columns import Columns
 from models.relationships import Relationship
@@ -10,42 +13,55 @@ class DBModel(object):
         self.synonyms_col = []
         self.synonyms_tab = []
         self.entity_graph = []
+        self.config = Configuration()
+        self.conn = pyodbc.connect(self.config.get_sql_connection_string())
         self.load_db_model()
 
     def load_db_model(self):
-        # load schema from database
-        entity_student = Entities("student", "name", "id")
-        entity_student.columns.append(Columns("id", "int"))
-        entity_student.columns.append(Columns("name", "string"))
-        entity_student.columns.append(Columns("age", "int"))
-        entity_student.columns.append(Columns("class", "int"))
+        # loading the database from sql server
+        cursor = self.conn.cursor()
+        cursor.execute(self.config.get_tables_sql_query())
+        for row in cursor:
+            self.entities.append(Entities(row.table_name, self.config.get_default_column(row.table_name)))
 
-        self.entities.append(entity_student)
+        cursor.execute(self.config.get_columns_sql_query())
+        current_entity = None
+        current_entity_name = ""
+        for row in cursor:
+            if current_entity_name != row.table_name:
+                current_entity_name = row.table_name
+                current_entity = next(en for en in self.entities if en.name == current_entity_name)
 
-        entity_subject = Entities("subject", "name", "id")
-        entity_subject.columns.append(Columns("id", "int"))
-        entity_subject.columns.append(Columns("subject", "string"))
-        entity_subject.columns.append(Columns("class", "int"))
+            col_type = row.type_name
+            if col_type == "varchar" or col_type == "nvarchar":
+                col_type = "string"
+            current_entity.columns.append(Columns(row.column_name, col_type))
 
-        self.entities.append(entity_subject)
+        current_entity = None
+        current_entity_name = ""
+        cursor.execute(self.config.get_FK_sql_query())
+        for row in cursor:
+            self.relationships.append(Relationship(row.parent_table, row.refrenced_table, row.parent_table_col, row.referenced_table_col))
+            if len([en for en in self.entity_graph if en[0] == row.parent_table]) > 0:
+                current_entity = next(en for en in self.entity_graph if en[0] == row.parent_table)
+                current_entity[1].append(row.refrenced_table)
+            else:
+                self.entity_graph.append((row.parent_table, [row.refrenced_table]))
+            
+            if len([en for en in self.entity_graph if en[0] == row.refrenced_table]) > 0:
+                current_entity = next(en for en in self.entity_graph if en[0] == row.refrenced_table)
+                current_entity[1].append(row.parent_table)
+            else:
+                self.entity_graph.append((row.refrenced_table, [row.parent_table]))
 
-        entity_student_mark = Entities("student_mark", "id", "id")
-        entity_student_mark.columns.append(Columns("id", "int"))
-        entity_student_mark.columns.append(Columns("student_id", "int"))
-        entity_student_mark.columns.append(Columns("subject_id", "int"))
-        entity_student_mark.columns.append(Columns("mark", "int"))
-        entity_student_mark.columns.append(Columns("year", "int"))
+        current_entity = None
+        current_entity_name = ""
+        cursor.execute(self.config.get_PK_sql_query())
+        for row in cursor:
+            if len([en for en in self.entity_graph if en[0] == row.table_name]) == 1:
+                current_entity = next(en for en in self.entities if en.name == row.table_name)
+                current_entity.primaryKey = row.primary_key
 
-        self.entities.append(entity_student_mark)
-
-        self.relationships.append(Relationship("student", "student_mark", "id", "student_id"))
-
-        self.relationships.append(Relationship("subject", "student_mark", "id", "subject_id"))
-
-        self.entity_graph.append(("student", ["student_mark"]))
-        self.entity_graph.append(("student_mark", ["student", "subject"]))
-        self.entity_graph.append(("subject", ["student_mark"]))
-        
         # load synonyms from declarative file
         # column sysnonyms
         self.synonyms_col.append(Synonyms("class", "standard"))
@@ -56,12 +72,13 @@ class DBModel(object):
         self.columns = [column for entity in self.entities for column in entity.columns]
         
 
+    # might have to write a custom matcher TODO
     # build the matcher based upon the original value and domain synonyms defined
     def get_matcher(self, matcher, nlp):
         for entity in self.entities:
             matcher.add(entity.name.upper() + "_TABLE", None, nlp(entity.name.lower()))    
             for column in entity.columns:
-                matcher.add(column.name.upper() + "_COLUMN", None, nlp(column.name.lower()))        
+                matcher.add(column.name.upper() + "_COLUMN", None, nlp(column.name.lower()))
 
         # add table synonyms to matcher
         for synonym in self.synonyms_tab:
@@ -74,6 +91,27 @@ class DBModel(object):
             for column in self.columns:
                 if synonym.column == column.name:
                     matcher.add(column.name.upper() + "_COLUMN", None, nlp(synonym.synonym.lower()))        
+                    
+
+        return matcher
+
+    def get_custom_matcher(self, matcher, nlp):
+        for entity in self.entities:
+            matcher.add(entity.name.upper() + "_TABLE", nlp(entity.name.lower()))    
+            for column in entity.columns:
+                matcher.add(column.name.upper() + "_COLUMN", nlp(column.name.lower()))
+
+        # add table synonyms to matcher
+        for synonym in self.synonyms_tab:
+            for entity in self.entities:
+                if synonym.column == entity.name:
+                    matcher.add(entity.name.upper() + "_TABLE", nlp(synonym.synonym.lower()))        
+
+        # add column synonyms to matcher
+        for synonym in self.synonyms_col:
+            for column in self.columns:
+                if synonym.column == column.name:
+                    matcher.add(column.name.upper() + "_COLUMN", nlp(synonym.synonym.lower()))        
                     
 
         return matcher

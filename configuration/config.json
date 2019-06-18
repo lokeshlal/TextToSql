@@ -1,0 +1,12 @@
+{
+    "sql": {
+        "connection_string":";"
+    },
+    "default_columns": {
+        "entities": {
+            "student":"name",
+            "subject":"name",
+            "student_mark":"id"
+        }
+    }
+}

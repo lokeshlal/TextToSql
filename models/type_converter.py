@@ -1,6 +1,6 @@
 def get_value(value, type):
     if type == "string":
-        return value
+        return str(value)
     elif type == "int":
         try:
             return int(value)

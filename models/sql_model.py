@@ -1,3 +1,7 @@
+import copy 
+
+from models.columns import Columns
+
 class SQLGenerator(object):
     def __init__(self, entities, columns, db_model):
         self.columns = columns
@@ -255,11 +259,14 @@ class SQLGenerator(object):
 
         return (column_parent_entity_found, None, None)
 
+
+
     def get_sql(self):
         for column in self.columns:
             # reset the entities_parsed array for new column
             self.entities_parsed = []
             column_parent_entity_found, model_name, columnName = self.find_entity(column)
+
             if column_parent_entity_found == True:
                 if len([ecm for ecm in self.entity_column_mapping if ecm[0] == model_name]) == 1:
                     ecm = next(ecm for ecm in self.entity_column_mapping if ecm[0] == model_name)
@@ -268,6 +275,25 @@ class SQLGenerator(object):
                     self.entity_column_mapping.append((model_name, [columnName]))
             else:
                 print("Column " + column.name + " not found.. ignoring column")
+        
+        for entity in self.entities:
+            if entity.condition is not None and entity.value_ is not None:
+                # reset the entities_parsed array for new column
+                model_name = entity.name
+
+                ent = next(en for en in self.db_model.entities if en.name.lower() == entity.name.lower())
+                default_column = next(col for col in ent.columns if col.name.lower() == ent.defaultColumn.lower())
+                copy_default_column = copy.copy(default_column)  
+                copy_default_column.condition = entity.condition
+                copy_default_column.value_ = entity.value_                    
+
+                if len([ecm for ecm in self.entity_column_mapping if ecm[0].lower() == model_name.lower()]) == 1:
+                    ecm = next(ecm for ecm in self.entity_column_mapping if ecm[0].lower() == model_name.lower())
+                    ecm[1].append(copy_default_column)
+                else:
+                    self.entity_column_mapping.append((model_name.lower(), [copy_default_column]))
+                
+        print([(e[0]) for e in self.entity_column_mapping])
         # build the sql
         self.find_relationships()
         self.find_conditions()
