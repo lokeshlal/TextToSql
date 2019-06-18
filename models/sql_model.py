@@ -114,7 +114,29 @@ class SQLGenerator(object):
         db_model_ent = next(e for e in self.db_model.entities if e.name.lower() == entity.lower())
         # db_model_ent.primaryKey
         # correlation
-        correlation = entity + "2." + db_model_ent.primaryKey + "=" + entity + "1." + db_model_ent.primaryKey
+
+        # find where this table is being referenced
+        entity_relationships = [(rel.entity1, rel.column1) for rel in self.db_model.relationships if (rel.entity2 == entity)]
+
+        correlation_entity = entity
+        correlation_entity_column = db_model_ent.primaryKey
+        parent_entity_exists = False
+        parent_entries = []
+        for ecm in self.entity_column_mapping:
+            if ecm[0] != entity:
+                if ecm[0] in [ent[0] for ent in entity_relationships]:
+                    parent_entry = next(ent for ent in entity_relationships if ent[0] == ecm[0])
+                    parent_entity_exists = True
+                    parent_entries.append(parent_entry)
+                    
+        if parent_entity_exists == True and len(parent_entry) > 0:
+            correlations = []
+            for parent_entry in parent_entries:
+                correlations.append(parent_entry[0] + "2." + parent_entry[1] + "=" + parent_entry[0] + "1." + parent_entry[1])
+            correlation = " and ".join(correlations)
+        else:
+            correlation = entity + "2." + db_model_ent.primaryKey + "=" + entity + "1." + db_model_ent.primaryKey
+        
         if type_sub_query_where_clause == "":
             type_sub_query_where_clause = correlation
         else:

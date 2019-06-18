@@ -67,9 +67,9 @@ lemmatizedSentence = lemmatizedSentence.lstrip()
 spacy_stopwords = spacy.lang.en.stop_words.STOP_WORDS
 docLemmatized = nlp(lemmatizedSentence)
 
-for chunk in docLemmatized.noun_chunks:
-    print(chunk.text, chunk.root.text, chunk.root.dep_,
-            chunk.root.head.text)
+# for chunk in docLemmatized.noun_chunks:
+#     print(chunk.text, chunk.root.text, chunk.root.dep_,
+#             chunk.root.head.text)
 
 # get all tables and columns in the question
 # matches = matcher(docLemmatized)
