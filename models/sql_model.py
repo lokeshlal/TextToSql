@@ -211,7 +211,7 @@ class SQLGenerator(object):
                 if cm.condition is not None and cm.value_ is not None and cm.value_ != "NoValue":
                     val = cm.value_
                     if cm.type_ == "string":
-                        val = "\"" + val + "\""
+                        val = "'" + val + "'"
                     self.conditions.append((ecm[0], cm.name.lower(), cm.condition, str(val)))
 
     def find_relationships(self):
@@ -311,5 +311,5 @@ class SQLGenerator(object):
         self.find_conditions()
         self.find_select()
         self.build_query()
-        self.run_query()
+        return self.run_query()
 

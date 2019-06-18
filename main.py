@@ -31,17 +31,18 @@ custom_matcher = Matcher()
 custom_matcher = db_model.get_custom_matcher(custom_matcher, nlp)
 # test sentence
 # sentence = u'Show all students whose marks greater than 30'
-# sentence = u'students in class 10 and mark 30 in english subject'
-sentence = u'students in class 10 and marks less than 30 in english subject in year greater than 2018'
-# sentence = u'students in class 10 and marks less than 30 in english subject'
-# sentence = u'average marks of students in english subject in class 10'
-# sentence = u'student with maximum marks in english subject in class 10'
-# sentence = u'total marks of students in class 10 in year 2018'
-# sentence = u'students in class 10 with 30 marks in english subject'
-# sentence = u'students in class 10 and mark in english subject is 30'
-# sentence = u'students in class 10 and marks less than 30 in english subject'
+# sentence = u'students in class 12 and mark 30 in english subject'
+# sentence = u'students in class 12 and marks less than 50 in english subject in year greater than 2018'
+# sentence = u'students in class 12 and marks less than 30 in english subject'
+# sentence = u'average marks of students in english subject in class 12'
+sentence = u'average marks in english subject in class 12'
+# sentence = u'student with maximum marks in english subject in class 12'
+# sentence = u'total marks of students in class 12 in year 2019'
+# sentence = u'students in class 12 with 50 marks in english subject'
+# sentence = u'students in class 12 and mark in english subject is 30'
+# sentence = u'students in class 12 and marks less than 30 in english subject'
 
-# basic string replacements
+# basic string replacements for count and sum
 sentence = sentence.replace("total number", "count")
 sentence = sentence.replace("total", "sum")
 
@@ -78,6 +79,8 @@ for match in matches:
         if len(columnType) > 0:
             columnType = columnType[0]
         matched_columns.append(Columns(match[0].replace("_COLUMN",""), columnType))
+
+print([m for m in matches])
 
 # get values for the captured columns in the above use case
 for token in docLemmatized:
@@ -200,6 +203,7 @@ for token in docLemmatized:
 # matched columns
 # print("\n".join([(mc.name + " -- " + str(mc.value_) + " -- " + " condition : " + str(mc.condition) + " -- " + " isMax : " + str(mc.isMax) + " -- " + " isMin : " + str(mc.isMin) + " -- " + " isAverage : " + str(mc.isAverage)) for mc in matched_columns]))
 sql_generator = SQLGenerator(matched_entities, matched_columns, db_model)
-sql_generator.get_sql()
+result = sql_generator.get_sql()
 
 print(sql_generator.query)
+print(result)

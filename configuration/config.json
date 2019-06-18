@@ -1,6 +1,6 @@
 {
     "sql": {
-        "connection_string":";"
+        "connection_string":"Driver={ODBC Driver 13 for SQL Server};Server=tcp:texttosql.database.windows.net,1433;Database=testtosql;Uid=nagarro@texttosql;Pwd=Passw0rd@123;Encrypt=yes;TrustServerCertificate=no;Connection Timeout=30;"
     },
     "default_columns": {
         "entities": {
@@ -8,5 +8,11 @@
             "subject":"name",
             "student_mark":"id"
         }
-    }
+    },
+    "entities_to_load": [
+        {
+            "entity": "subject",
+            "column": "name" 
+        }
+    ]
 }

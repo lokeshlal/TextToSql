@@ -13,6 +13,7 @@ class DBModel(object):
         self.synonyms_col = []
         self.synonyms_tab = []
         self.entity_graph = []
+        self.loaded_entities = []
         self.config = Configuration()
         self.conn = pyodbc.connect(self.config.get_sql_connection_string())
         self.load_db_model()
@@ -61,6 +62,15 @@ class DBModel(object):
             if len([en for en in self.entity_graph if en[0] == row.table_name]) == 1:
                 current_entity = next(en for en in self.entities if en.name == row.table_name)
                 current_entity.primaryKey = row.primary_key
+
+        for entity_to_load in self.config.get_entitites_to_load():
+            entity_load_query = "select distinct " + entity_to_load["column"] + " from " + entity_to_load["entity"]
+            cursor.execute(self.config.get_tables_sql_query())
+            entity_data = (entity_to_load["entity"], [])
+            for row in cursor:
+                entity_data[1].append(row[0])
+            self.loaded_entities.append(entity_data)
+            
 
         # load synonyms from declarative file
         # column sysnonyms
