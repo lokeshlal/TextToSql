@@ -1,5 +1,7 @@
 import copy 
+import pyodbc
 
+from configuration.config import Configuration
 from models.columns import Columns
 
 class SQLGenerator(object):
@@ -23,6 +25,17 @@ class SQLGenerator(object):
         self.isCountEntity = ""
         self.isSum = ""
         self.isSumEntity = ""
+        self.config = Configuration()
+        self.conn = pyodbc.connect(self.config.get_sql_connection_string())
+
+    def run_query(self):
+        cursor = self.conn.cursor()
+        cursor.execute(self.query)
+        result = []
+        for row in cursor:
+            result.append([col for col in row])
+        return result
+
 
     def sortSecond(self, join_comb): 
         return join_comb[0] 
@@ -293,10 +306,10 @@ class SQLGenerator(object):
                 else:
                     self.entity_column_mapping.append((model_name.lower(), [copy_default_column]))
                 
-        print([(e[0]) for e in self.entity_column_mapping])
         # build the sql
         self.find_relationships()
         self.find_conditions()
         self.find_select()
         self.build_query()
+        self.run_query()
 
