@@ -35,11 +35,11 @@ custom_matcher = db_model.get_custom_matcher(custom_matcher, nlp)
 # sentence = u'students in class 12 and marks less than 50 in english subject in year greater than 2018'
 # sentence = u'students in class 12 and marks less than 30 in english subject'
 # sentence = u'average marks of students in english subject in class 12'
-sentence = u'average marks in english subject in class 12'
+# sentence = u'average marks in english subject in class 12'
 # sentence = u'student with maximum marks in english subject in class 12'
 # sentence = u'minimum marks in english subject in class 12'
 # sentence = u'total marks of students in class 12 in year 2019'
-# sentence = u'students in class 12 with 50 marks in english subject'
+sentence = u'students in class 12 with marks less than 60 in english subject'
 # sentence = u'students in class 12 and mark in english subject is 30'
 # sentence = u'students in class 12 and marks less than 30 in english subject'
 
