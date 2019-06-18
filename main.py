@@ -37,6 +37,7 @@ custom_matcher = db_model.get_custom_matcher(custom_matcher, nlp)
 # sentence = u'average marks of students in english subject in class 12'
 sentence = u'average marks in english subject in class 12'
 # sentence = u'student with maximum marks in english subject in class 12'
+# sentence = u'minimum marks in english subject in class 12'
 # sentence = u'total marks of students in class 12 in year 2019'
 # sentence = u'students in class 12 with 50 marks in english subject'
 # sentence = u'students in class 12 and mark in english subject is 30'
@@ -66,6 +67,10 @@ lemmatizedSentence = lemmatizedSentence.lstrip()
 spacy_stopwords = spacy.lang.en.stop_words.STOP_WORDS
 docLemmatized = nlp(lemmatizedSentence)
 
+for chunk in docLemmatized.noun_chunks:
+    print(chunk.text, chunk.root.text, chunk.root.dep_,
+            chunk.root.head.text)
+
 # get all tables and columns in the question
 # matches = matcher(docLemmatized)
 matches = custom_matcher.find(lemmatizedSentence)
@@ -80,7 +85,13 @@ for match in matches:
             columnType = columnType[0]
         matched_columns.append(Columns(match[0].replace("_COLUMN",""), columnType))
 
-print([m for m in matches])
+# print("####################")
+# print(lemmatizedSentence)
+# print([(m[0], m[1]) for m in custom_matcher.matcher])
+# print([(m[0], m[1]) for m in matches])
+# print([m.name for m in matched_entities])
+# print([m.name for m in matched_columns])
+# print("####################")
 
 # get values for the captured columns in the above use case
 for token in docLemmatized:
@@ -93,6 +104,7 @@ for token in docLemmatized:
         span_ranges = re.split(" in |in | in| and |and | and| with |with | with", contextual_span)
         
         for span in span_ranges:
+            # print("entity : ", span)
             if matched_entity.name.lower() in span:
                 matched_entity.condition = "="
                 if "average" in span:
@@ -147,6 +159,7 @@ for token in docLemmatized:
         contextual_span = get_neighbour_tokens(token)
         span_ranges = re.split(" in |in | in| and |and | and| with |with | with", contextual_span)
         for span in span_ranges:
+            # print("column : ", span)
             if matched_column.name.lower() in span:
                 matched_column.condition = "="
                 if "average" in span:
@@ -199,9 +212,13 @@ for token in docLemmatized:
 # final representation of columns (matched_columns) and entities (matched_entities), including max, min, average, conditions
 # now next is to build the SQL query generator
 # matched entities
+# print("####################")
 # print("\n".join([(mc.name + " -- " + str(mc.value_) + " -- " + " condition : " + str(mc.condition) + " -- " + " isMax : " + str(mc.isMax) + " -- " + " isMin : " + str(mc.isMin) + " -- " + " isAverage : " + str(mc.isAverage)) for mc in matched_entities]))
-# matched columns
+# print("####################")
+# # matched columns
 # print("\n".join([(mc.name + " -- " + str(mc.value_) + " -- " + " condition : " + str(mc.condition) + " -- " + " isMax : " + str(mc.isMax) + " -- " + " isMin : " + str(mc.isMin) + " -- " + " isAverage : " + str(mc.isAverage)) for mc in matched_columns]))
+# print("####################")
+
 sql_generator = SQLGenerator(matched_entities, matched_columns, db_model)
 result = sql_generator.get_sql()
 

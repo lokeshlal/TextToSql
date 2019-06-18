@@ -11,7 +11,9 @@ class Matcher(object):
     def find(self, phrase):
         matches = []
         for match in self.matcher:
-            if " " + str(match[1]) + " " in phrase:
+            if " " + str(match[1]) + " " in phrase \
+                or phrase.startswith(str(match[1]) + " ") \
+                or phrase.endswith(" " + str(match[1])):
                 matches.append(copy.copy(match))
         return matches
     

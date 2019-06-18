@@ -1,8 +1,8 @@
 SELECT
-    tp.name 'parent_table',
-    cp.name as 'parent_table_col', cp.column_id,
-    tr.name 'refrenced_table',
-    cr.name 'referenced_table_col', cr.column_id
+    tr.name 'parent_table',
+    cr.name 'parent_table_col', cr.column_id,
+    tp.name 'refrenced_table',
+    cp.name as 'referenced_table_col', cp.column_id
 FROM 
     sys.foreign_keys fk
     INNER JOIN 

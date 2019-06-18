@@ -89,10 +89,11 @@ class SQLGenerator(object):
             " Where " + \
             type_sub_query_where_clause
         self.query = "SELECT " + \
-            select_clause + " " + \
+            select_clause + ", " + entity + "1." + column + " " + \
             " From " + \
             from_clause + \
             " Where " + \
+            where_clause + " and " + \
             entity + "1." + column + " = (" + typeQuery + ")"
 
     def correlated_sub_query_in_select(self, 
@@ -112,10 +113,12 @@ class SQLGenerator(object):
         # find the identifier column of the entity in parameter
         db_model_ent = next(e for e in self.db_model.entities if e.name.lower() == entity.lower())
         # db_model_ent.primaryKey
+        # correlation
+        correlation = entity + "2." + db_model_ent.primaryKey + "=" + entity + "1." + db_model_ent.primaryKey
         if type_sub_query_where_clause == "":
-            type_sub_query_where_clause = entity + "2." + db_model_ent.primaryKey + "=" + entity + "1." + db_model_ent.primaryKey
+            type_sub_query_where_clause = correlation
         else:
-            type_sub_query_where_clause = type_sub_query_where_clause + " and " + entity + "2." + db_model_ent.primaryKey + "=" + entity + "1." + db_model_ent.primaryKey
+            type_sub_query_where_clause = type_sub_query_where_clause + " and " + correlation
 
         type_sub_query = "SELECT " + \
             type_ + "(" + entity + "2." + column + ") " + \
@@ -305,7 +308,8 @@ class SQLGenerator(object):
                     ecm[1].append(copy_default_column)
                 else:
                     self.entity_column_mapping.append((model_name.lower(), [copy_default_column]))
-                
+        
+        # print([e[0] for e in self.entity_column_mapping])
         # build the sql
         self.find_relationships()
         self.find_conditions()
