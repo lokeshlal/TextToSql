@@ -1,6 +1,6 @@
 {
     "sql": {
-        "connection_string":"Driver={ODBC Driver 13 for SQL Server};Server=tcp:texttosql.database.windows.net,1433;Database=testtosql;Uid=nagarro@texttosql;Pwd=Passw0rd@123;Encrypt=yes;TrustServerCertificate=no;Connection Timeout=30;"
+        "connection_string":""
     },
     "default_columns": {
         "entities": {
