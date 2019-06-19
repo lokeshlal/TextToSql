@@ -44,7 +44,7 @@ class SQLGenerator(object):
         # build the from_clause
         from_clause = ""
         if len(self.entity_column_mapping) == 1:
-            from_clause = self.entity_column_mapping[0][0]
+            from_clause = self.entity_column_mapping[0][0] + " " + self.entity_column_mapping[0][0] + level
         elif len(self.entity_column_mapping) > 1:
             from_clause = ""
             join_index = 0
@@ -149,8 +149,11 @@ class SQLGenerator(object):
             " Where " + \
             type_sub_query_where_clause
 
+        if select_clause != "":
+            select_clause = select_clause + ", "
+
         self.query = "SELECT distinct " + \
-            select_clause + ", (" + type_sub_query + ") as " + type_ + "_" + column + " " + \
+            select_clause + "(" + type_sub_query + ") as " + type_ + "_" + column + " " + \
             " From " + \
             from_clause + \
             " Where " + \
@@ -294,48 +297,74 @@ class SQLGenerator(object):
             # column found, return entity with column
             if column_parent_entity_found == True:
                 return (column_parent_entity_found, model_name, columnName)
-
+                
         return (column_parent_entity_found, None, None)
 
 
-
     def get_sql(self):
-        for column in self.columns:
-            # reset the entities_parsed array for new column
-            self.entities_parsed = []
-            column_parent_entity_found, model_name, columnName = self.find_entity(column)
-
-            if column_parent_entity_found == True:
-                if len([ecm for ecm in self.entity_column_mapping if ecm[0] == model_name]) == 1:
-                    ecm = next(ecm for ecm in self.entity_column_mapping if ecm[0] == model_name)
-                    ecm[1].append(columnName)
-                else:
-                    self.entity_column_mapping.append((model_name, [columnName]))
-            else:
-                print("Column " + column.name + " not found.. ignoring column")
-        
-        for entity in self.entities:
-            if entity.condition is not None and entity.value_ is not None:
+        if len(self.entities) > 0:
+            for column in self.columns:
                 # reset the entities_parsed array for new column
-                model_name = entity.name
+                self.entities_parsed = []
+                column_parent_entity_found, model_name, columnName = self.find_entity(column)
 
-                ent = next(en for en in self.db_model.entities if en.name.lower() == entity.name.lower())
-                default_column = next(col for col in ent.columns if col.name.lower() == ent.defaultColumn.lower())
-                copy_default_column = copy.copy(default_column)  
-                copy_default_column.condition = entity.condition
-                copy_default_column.value_ = entity.value_                    
-
-                if len([ecm for ecm in self.entity_column_mapping if ecm[0].lower() == model_name.lower()]) == 1:
-                    ecm = next(ecm for ecm in self.entity_column_mapping if ecm[0].lower() == model_name.lower())
-                    ecm[1].append(copy_default_column)
+                if column_parent_entity_found == True:
+                    if len([ecm for ecm in self.entity_column_mapping if ecm[0] == model_name]) == 1:
+                        ecm = next(ecm for ecm in self.entity_column_mapping if ecm[0] == model_name)
+                        ecm[1].append(columnName)
+                    else:
+                        self.entity_column_mapping.append((model_name, [columnName]))
                 else:
-                    self.entity_column_mapping.append((model_name.lower(), [copy_default_column]))
-        
-        # print([e[0] for e in self.entity_column_mapping])
+                    print("Column " + column.name + " not found.. ignoring column")
+            
+            for entity in self.entities:
+                if entity.condition is not None and entity.value_ is not None:
+                    # reset the entities_parsed array for new column
+                    model_name = entity.name
+
+                    ent = next(en for en in self.db_model.entities if en.name.lower() == entity.name.lower())
+                    default_column = next(col for col in ent.columns if col.name.lower() == ent.defaultColumn.lower())
+                    copy_default_column = copy.copy(default_column)  
+                    copy_default_column.condition = entity.condition
+                    copy_default_column.value_ = entity.value_                    
+
+                    if len([ecm for ecm in self.entity_column_mapping if ecm[0].lower() == model_name.lower()]) == 1:
+                        ecm = next(ecm for ecm in self.entity_column_mapping if ecm[0].lower() == model_name.lower())
+                        ecm[1].append(copy_default_column)
+                    else:
+                        self.entity_column_mapping.append((model_name.lower(), [copy_default_column]))
+        elif len(self.columns) > 0:
+            # No entities identified in the phrase
+            # Finding...entities as per the columns identified in the phrase
+            for col in self.columns:
+                max_col_found_count = 0
+                max_col_found_count_entity = ""
+                # look for columns and find max column in an entity and related entities"
+                for entity in self.db_model.entities:
+                    column_found_count = 0
+                    if col.name.lower() in [col.name.lower() for col in entity.columns]:
+                        column_found_count = column_found_count + 1
+                if max_col_found_count <  column_found_count:
+                    max_col_found_count = column_found_count
+                    max_col_found_count_entity = entity.name
+                    print(max_col_found_count_entity, max_col_found_count, col.name, col.isSum)
+
+                if max_col_found_count_entity != "":
+                    if len([ecm for ecm in self.entity_column_mapping if ecm[0] == max_col_found_count_entity]) == 1:
+                        ecm = next(ecm for ecm in self.entity_column_mapping if ecm[0] == max_col_found_count_entity)
+                        ecm[1].append(col)
+                    else:
+                        self.entity_column_mapping.append((max_col_found_count_entity, [col]))
+        else:
+            # no column and entity identified
+            return []
+
+        print([(e[0], [ec.name for ec in e[1]]) for e in self.entity_column_mapping])
         # build the sql
         self.find_relationships()
         self.find_conditions()
         self.find_select()
         self.build_query()
+        print(self.query)
         return self.run_query()
 
