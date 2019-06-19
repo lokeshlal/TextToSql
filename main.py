@@ -28,6 +28,7 @@ lemma_exceptions = ["greater", "less", "than", "more"]
 # also add option to get the synonyms in declarative way
 custom_matcher = Matcher()
 custom_matcher = db_model.get_custom_matcher(custom_matcher, nlp)
+
 # test sentence
 # sentence = u'Show all students with marks greater than 30'
 # sentence = u'students in class 12 and mark 30 in english subject'
@@ -45,6 +46,7 @@ custom_matcher = db_model.get_custom_matcher(custom_matcher, nlp)
 # sentence = u'students in class 12 and marks less than 50 in english subject'
 # sentence = u'marks of Manoj Garg student in english subject'
 
+# main method to process the incoming sentence
 def process_sentence(sentence):
 
     # basic string replacements for count and sum
@@ -283,6 +285,10 @@ def home():
     content = flask.request.get_json()
     print(content['sentence'])
     return flask.jsonify(process_sentence(content['sentence']))
+
+@app.route('/')
+def root():
+    return flask.send_from_directory('','index.html') # serve root index.html
 
 app.run()
 

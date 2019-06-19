@@ -1,0 +1,61 @@
+<html>
+    <head>
+        <title>Text to sql</title>
+        <style>
+            table, th, td {
+               border: 1px solid black;
+            }
+        </style>
+    </head>
+    <body>
+        <br/>
+        <div>
+            <i><b>Search</b></i> : <input type="text" id="search" style="height:40px; width: 600px;" >
+        </div>
+        <br/>
+        <div id="results">
+        </div>
+        <script>
+            document.getElementById('search').onkeypress = function(e){
+                if (!e) e = window.event;
+                var keyCode = e.keyCode || e.which;
+                if (keyCode == '13'){
+                    // Enter pressed
+                    getResult();
+                    return false;
+                }
+            }
+
+            function getResult() {
+                var xhttp = new XMLHttpRequest();
+                xhttp.onreadystatechange = function() {
+                    if (this.readyState == 4 && this.status == 200) {
+                        var json_response = JSON.parse(this.responseText);
+                        var obj = json_response.result;
+                        var tbl= "<table>";
+                        for(var i=0;i<obj.length;i++)
+                        {
+                            var tr="<tr>";
+                            for(var j = 0; j < obj[i].length; j++) {
+                                tr += "<td>" + obj[i][j] + "</td>";
+                            }
+                            tr += "</tr>";
+                            tbl += tr;
+                        }
+                        tbl += "</table>";   
+                        var div_result = document.createElement("div");
+                        div_result.innerHTML = "<div>" + tbl + "</div>" +
+                            "<div><i>" + json_response.sql + "</i></div><br/>";
+                        document.getElementById("results").insertBefore(div_result,
+                            document.getElementById("results").firstChild);
+                    }
+                };
+                xhttp.open("POST", "/request");
+                xhttp.setRequestHeader("Content-Type", "application/json");
+                xhttp.send(JSON.stringify({ sentence: document.getElementById('search').value }));
+                xhttp.send();
+            }
+
+        </script>
+    </body>
+</html>
