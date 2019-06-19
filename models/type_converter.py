@@ -13,6 +13,14 @@ def get_value(value, type):
             return "NoValue"
     return "NoValue"
 
+def get_type(value, type):
+    if type == "string":
+        type = "str"
+    if type(value).__name__ == type:
+        return True
+    else:
+        return False
+
 def get_token_child_len(token):
     children_length = len([child.text for child in token.children])
     return children_length

@@ -6,6 +6,16 @@ __pycache__/
 # C extensions
 *.so
 
+# Blazor
+.vs/
+bin/
+obj/
+*.user
+artifacts/
+.vscode/
+.dotnet/
+*.binlog
+
 # Distribution / packaging
 .Python
 build/
