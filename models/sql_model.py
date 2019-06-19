@@ -88,8 +88,10 @@ class SQLGenerator(object):
             type_sub_query_from_clause + \
             " Where " + \
             type_sub_query_where_clause
+        if select_clause != "":
+            select_clause = select_clause + ", "
         self.query = "SELECT " + \
-            select_clause + ", " + entity + "1." + column + " " + \
+            select_clause + entity + "1." + column + " " + \
             " From " + \
             from_clause + \
             " Where " + \
@@ -122,20 +124,25 @@ class SQLGenerator(object):
         correlation_entity_column = db_model_ent.primaryKey
         parent_entity_exists = False
         parent_entries = []
-        for ecm in self.entity_column_mapping:
-            if ecm[0] != entity:
-                if ecm[0] in [ent[0] for ent in entity_relationships]:
-                    parent_entry = next(ent for ent in entity_relationships if ent[0] == ecm[0])
-                    parent_entity_exists = True
-                    parent_entries.append(parent_entry)
-                    
-        if parent_entity_exists == True and len(parent_entry) > 0:
-            correlations = []
-            for parent_entry in parent_entries:
-                correlations.append(parent_entry[0] + "2." + parent_entry[1] + "=" + parent_entry[0] + "1." + parent_entry[1])
-            correlation = " and ".join(correlations)
-        else:
-            correlation = entity + "2." + db_model_ent.primaryKey + "=" + entity + "1." + db_model_ent.primaryKey
+        if len(self.entity_column_mapping) > 1:
+            for ecm in self.entity_column_mapping:
+                if ecm[0] != entity:
+                    if ecm[0] in [ent[0] for ent in entity_relationships]:
+                        parent_entry = next(ent for ent in entity_relationships if ent[0] == ecm[0])
+                        parent_entity_exists = True
+                        parent_entries.append(parent_entry)
+        elif len(self.entity_column_mapping) == 1:
+            # only one entity, use where filters
+            correlation = " and ".join([cond[0] + "1" + "." + cond[1] + " = " + cond[0] + "2" + "." + cond[1] for cond in self.conditions])
+        
+        if len(self.entity_column_mapping) > 1:              
+            if parent_entity_exists == True and len(parent_entry) > 0:
+                correlations = []
+                for parent_entry in parent_entries:
+                    correlations.append(parent_entry[0] + "2." + parent_entry[1] + "=" + parent_entry[0] + "1." + parent_entry[1])
+                correlation = " and ".join(correlations)
+            else:
+                correlation = entity + "2." + db_model_ent.primaryKey + "=" + entity + "1." + db_model_ent.primaryKey
         
         if type_sub_query_where_clause == "":
             type_sub_query_where_clause = correlation
@@ -333,6 +340,9 @@ class SQLGenerator(object):
                         ecm[1].append(copy_default_column)
                     else:
                         self.entity_column_mapping.append((model_name.lower(), [copy_default_column]))
+                else:
+                    if len([ecm for ecm in self.entity_column_mapping if ecm[0].lower() == entity.name.lower()]) == 0:
+                        self.entity_column_mapping.append((entity.name.lower(), []))
         elif len(self.columns) > 0:
             # No entities identified in the phrase
             # Finding...entities as per the columns identified in the phrase
@@ -347,7 +357,6 @@ class SQLGenerator(object):
                 if max_col_found_count <  column_found_count:
                     max_col_found_count = column_found_count
                     max_col_found_count_entity = entity.name
-                    print(max_col_found_count_entity, max_col_found_count, col.name, col.isSum)
 
                 if max_col_found_count_entity != "":
                     if len([ecm for ecm in self.entity_column_mapping if ecm[0] == max_col_found_count_entity]) == 1:
@@ -359,7 +368,7 @@ class SQLGenerator(object):
             # no column and entity identified
             return []
 
-        print([(e[0], [ec.name for ec in e[1]]) for e in self.entity_column_mapping])
+        # print([(e[0], [ec.name for ec in e[1]]) for e in self.entity_column_mapping])
         # build the sql
         self.find_relationships()
         self.find_conditions()

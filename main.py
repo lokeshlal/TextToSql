@@ -30,20 +30,21 @@ lemma_exceptions = ["greater", "less", "than", "more"]
 custom_matcher = Matcher()
 custom_matcher = db_model.get_custom_matcher(custom_matcher, nlp)
 # test sentence
-# sentence = u'Show all students whose marks greater than 30'
+sentence = u'Show all students with marks greater than 30'
 # sentence = u'students in class 12 and mark 30 in english subject'
 # sentence = u'students in class 12 and marks less than 50 in english subject in year greater than 2018'
-# sentence = u'students in class 12 and marks less than 30 in english subject'
+sentence = u'students in class 12 and marks less than 50 in english subject'
 # sentence = u'average marks of students in english subject in class 12'
 # sentence = u'average marks in english subject in class 12'
 # sentence = u'student with maximum marks in english subject in class 12'
 # sentence = u'minimum marks in english subject in class 12'
 # sentence = u'total marks of students in class 12 in year 2019'
 # sentence = u'students in class 12 with marks less than 60 in english subject'
-sentence = u'total marks in class 12 in year 2019'
-# sentence = u'students in class 12 and mark in english subject is 30'
-# sentence = u'students in class 12 and marks less than 30 in english subject'
-
+# sentence = u'total marks in class 12 in year 2019'
+# sentence = u'maximum marks in class 12 in year 2019'
+# sentence = u'students in class 12 and 69 marks in english subject'
+sentence = u'students in class 12 and marks less than 50 in english subject'
+sentence = u'marks of Manoj Garg student in english subject'
 # basic string replacements for count and sum
 sentence = sentence.replace("total number", "count")
 sentence = sentence.replace("total", "sum")
@@ -57,6 +58,16 @@ sentence = new_sentence.lstrip()
 
 # run nlp on sentence
 doc = nlp(sentence)
+
+identified_spans = []
+identified_entities = []
+
+for chunk in doc.noun_chunks:
+    identified_spans.append(chunk.text)
+    # print(chunk.text, " -- ", chunk.root.text, " -- ", chunk.root.dep_, " -- ", chunk.root.head.text)
+for ent in doc.ents:
+    identified_entities.append(ent.text)
+    # print(ent.text, ent.start_char, ent.end_char, ent.label_)
 
 # build the lemma sentence
 lemmatizedSentence = ''
@@ -103,9 +114,7 @@ for token in docLemmatized:
 
         contextual_span = get_neighbour_tokens(token)
         span_ranges = re.split(" in |in | in| and |and | and| with |with | with", contextual_span)
-        
         for span in span_ranges:
-            # print("entity : ", span)
             if matched_entity.name.lower() in span:
                 matched_entity.condition = "="
                 if "average" in span:
@@ -137,16 +146,25 @@ for token in docLemmatized:
                     .replace("min", "") \
                     .replace("max", "")
                 trimmed_span = ' '.join(trimmed_span.split())
-                
                 doc_span = nlp(trimmed_span)
 
                 for span_token in doc_span:
+
                     if span_token.text.lower() == matched_entity.name.lower():
+
                         if get_token_child_len(span_token) > 0:
                             span_token_child = next(itertools.islice(span_token.children, 1))
                             ent = next(en for en in db_model.entities if en.name.lower() == matched_entity.name.lower())
                             default_column = next(col for col in ent.columns if col.name.lower() == ent.defaultColumn.lower())
-                            matched_entity.value_ = get_value(span_token_child.text, default_column.type_)
+                            value = get_value(span_token_child.text, default_column.type_)
+
+                            identified_entity_exists = False
+                            for identified_entity in identified_entities:
+                                if identified_entity in trimmed_span and str(value) in identified_entity:
+                                    identified_entity_exists = True
+                                    value = identified_entity
+                            matched_entity.value_ = value
+
 
                 
         matched_entities = [me for me in matched_entities if me.name != token.text.upper()]
@@ -205,11 +223,33 @@ for token in docLemmatized:
                     if span_token.text.lower() == matched_column.name.lower():
                         if get_token_child_len(span_token) > 0:
                             span_token_child = next(itertools.islice(span_token.children, 1))
-                            matched_column.value_ = get_value(span_token_child.text, matched_column.type_)
+                            value = get_value(span_token_child.text, matched_column.type_)
+
+                            identified_entity_exists = False
+                            for identified_entity in identified_entities:
+                                if identified_entity in trimmed_span and str(value) in identified_entity:
+                                    identified_entity_exists = True
+                                    value = identified_entity
+                            matched_column.value_ = value
+                            
 
         matched_columns = [mc for mc in matched_columns if mc.name != token.text.upper()]
         matched_columns.append(matched_column)
-                         
+
+for loaded_entity in db_model.loaded_entities:
+    entity_name = loaded_entity[0]
+    for loaded_entity_value in loaded_entity[1]:
+        if loaded_entity_value.lower() in lemmatizedSentence.lower():
+            if entity_name in [me.name.lower() for me in matched_entities]:
+                # already exists
+                # no In operator support as of now
+                print("entity already processed")
+            else:
+                ent = Entities(entity_name.upper())
+                ent.condition = "="
+                ent.value_ = loaded_entity_value
+                matched_entities.append(ent)
+
 # final representation of columns (matched_columns) and entities (matched_entities), including max, min, average, conditions
 # now next is to build the SQL query generator
 # matched entities
@@ -221,7 +261,9 @@ for token in docLemmatized:
 # print("####################")
 
 sql_generator = SQLGenerator(matched_entities, matched_columns, db_model)
+print("=================================================================================")
 result = sql_generator.get_sql()
-
-print(sql_generator.query)
+# print(sql_generator.query)
+print("=================================================================================")
 print(result)
+print("=================================================================================")

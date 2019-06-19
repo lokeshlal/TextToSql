@@ -65,13 +65,12 @@ class DBModel(object):
 
         for entity_to_load in self.config.get_entitites_to_load():
             entity_load_query = "select distinct " + entity_to_load["column"] + " from " + entity_to_load["entity"]
-            cursor.execute(self.config.get_tables_sql_query())
+            cursor.execute(entity_load_query)
             entity_data = (entity_to_load["entity"], [])
             for row in cursor:
                 entity_data[1].append(row[0])
             self.loaded_entities.append(entity_data)
-            
-
+        
         # load synonyms from declarative file
         # column sysnonyms
         self.synonyms_col.append(Synonyms("class", "standard"))
