@@ -5,16 +5,211 @@
             table, th, td {
                border: 1px solid black;
             }
+
+            *
+            {
+                outline: none;
+            }
+
+            html, body
+            {
+                height: 100%;
+                min-height: 100%;
+            }
+
+            body
+            {
+                margin: 0;
+                background-color: #ffd8d8;
+            }
+
+            .tb
+            {
+                display: table;
+                width: 100%;
+            }
+
+            .td
+            {
+                display: table-cell;
+                vertical-align: middle;
+            }
+
+            input, button
+            {
+                color: #fff;
+                font-family: Nunito;
+                padding: 0;
+                margin: 0;
+                border: 0;
+                background-color: transparent;
+            }
+
+            #cover
+            {
+                width: 100%;
+                padding: 35px;
+                margin: -83px auto 0 auto;
+                background-color: #ff7575;
+                border-radius: 20px;
+                box-shadow: 0 10px 40px #ff7c7c, 0 0 0 20px #ffffffeb;
+                transform: scale(0.6);
+            }
+
+            form
+            {
+                height: 96px;
+            }
+
+            input[type="text"]
+            {
+                width: 100%;
+                height: 96px;
+                font-size: 40px;
+                line-height: 1;
+            }
+
+            input[type="text"]::placeholder
+            {
+                color: #e16868;
+            }
+
+            #s-cover
+            {
+                width: 1px;
+                padding-left: 35px;
+            }
+
+            button
+            {
+                position: relative;
+                display: block;
+                width: 84px;
+                height: 96px;
+                cursor: pointer;
+            }
+
+            #s-circle
+            {
+                position: relative;
+                top: -8px;
+                left: 0;
+                width: 43px;
+                height: 43px;
+                margin-top: 0;
+                border-width: 15px;
+                border: 15px solid #fff;
+                background-color: transparent;
+                border-radius: 50%;
+                transition: 0.5s ease all;
+            }
+
+            button span
+            {
+                position: absolute;
+                top: 68px;
+                left: 43px;
+                display: block;
+                width: 45px;
+                height: 15px;
+                background-color: transparent;
+                border-radius: 10px;
+                transform: rotateZ(52deg);
+                transition: 0.5s ease all;
+            }
+
+            button span:before, button span:after
+            {
+                content: '';
+                position: absolute;
+                bottom: 0;
+                right: 0;
+                width: 45px;
+                height: 15px;
+                background-color: #fff;
+                border-radius: 10px;
+                transform: rotateZ(0);
+                transition: 0.5s ease all;
+            }
+
+            #s-cover:hover #s-circle
+            {
+                top: -1px;
+                width: 67px;
+                height: 15px;
+                border-width: 0;
+                background-color: #fff;
+                border-radius: 20px;
+            }
+
+            #s-cover:hover span
+            {
+                top: 50%;
+                left: 56px;
+                width: 40px;
+                margin-top: -9px;
+                transform: rotateZ(0);
+            }
+
+            #s-cover:hover button span:before
+            {
+                bottom: 11px;
+                transform: rotateZ(52deg);
+            }
+
+            #s-cover:hover button span:after
+            {
+                bottom: -11px;
+                transform: rotateZ(-52deg);
+            }
+            #s-cover:hover button span:before, #s-cover:hover button span:after
+            {
+                right: -6px;
+                width: 40px;
+                background-color: #fff;
+            }
+
+            #results {
+                padding: 10px;
+                width: 60%;
+                float: left;
+            }
+
+            #queries {
+                padding: 10px;
+                width: 30%;
+                float: right;
+            }
+
+            #queries div {
+                cursor: pointer;
+            }
         </style>
     </head>
     <body>
-        <br/>
-        <div>
-            <i><b>Search</b></i> : <input type="text" id="search" style="height:40px; width: 600px;" >
+        <div id="cover" style="margin-top: 0px;">
+            <div class="tb">
+                <div class="td">
+                    <input type="text" placeholder="Search" required id="search" autocomplete="off">
+                </div>
+                <div class="td" id="s-cover">
+                    <button type="button" id="btn_search">
+                    <div id="s-circle"></div>
+                    <span></span>
+                    </button>
+                </div>
+            </div>
         </div>
         <br/>
         <div id="results">
+            <i><strong>Results</strong></i>
+            <hr/>
         </div>
+        <div id="queries">
+            <i><strong>Past queries</strong></i>
+            <hr/>
+        </div>
+        <script src="/static/sql-formatter.min.js"></script>
         <script>
             document.getElementById('search').onkeypress = function(e){
                 if (!e) e = window.event;
@@ -26,6 +221,12 @@
                 }
             }
 
+            document.getElementById('btn_search').onclick = function(e) {
+                getResult();
+                return false;
+            }
+
+            var query_count = 0
             function getResult() {
                 var xhttp = new XMLHttpRequest();
                 xhttp.onreadystatechange = function() {
@@ -33,7 +234,8 @@
                         var json_response = JSON.parse(this.responseText);
                         var obj = json_response.result;
                         var obj_columns = json_response.columns;
-                        var tbl= "<table>";
+                        var tbl = "<strong>Query: </strong><i>" + document.getElementById('search').value + "</i><br/><br/>"
+                        tbl += "<table>";
                         var tr_col="<tr>";
                         for(var i=0;i<obj_columns.length; i++) {
                             tr_col += "<td>" + obj_columns[i] + "</td>";
@@ -49,12 +251,23 @@
                             tr += "</tr>";
                             tbl += tr;
                         }
-                        tbl += "</table>";   
+                        tbl += "</table><br/>";   
                         var div_result = document.createElement("div");
                         div_result.innerHTML = "<div>" + tbl + "</div>" +
-                            "<div><i>" + json_response.sql + "</i></div><br/>";
+                            "<div><i><pre>" + window.sqlFormatter.format(json_response.sql) + "</pre></i></div><br/><hr /><br/>";
                         document.getElementById("results").insertBefore(div_result,
-                            document.getElementById("results").firstChild);
+                            document.getElementById("results").getElementsByTagName('div')[0]);
+                        query_count++;
+
+                        var query_text = document.getElementById('search').value;
+                        var div_query = document.createElement("div");
+                        div_query.onclick = function(e) {
+                            document.getElementById('search').value = query_text;
+                            document.getElementById('search').focus();
+                        }
+                        div_query.innerHTML = "<i>" + query_text + "</i><hr/>";
+                        document.getElementById("queries").insertBefore(div_query, 
+                            document.getElementById("queries").getElementsByTagName('div')[0]);
                     }
                 };
                 xhttp.open("POST", "/request");
