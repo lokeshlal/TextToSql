@@ -32,9 +32,12 @@ class SQLGenerator(object):
         cursor = self.conn.cursor()
         cursor.execute(self.query)
         result = []
+        columns = []
         for row in cursor:
             result.append([col for col in row])
-        return result
+
+        columns = [column[0] for column in cursor.description]
+        return [result, columns]
 
 
     def sortSecond(self, join_comb): 
@@ -82,20 +85,24 @@ class SQLGenerator(object):
         type_sub_query_where_clause = self.get_where_clause("2")
         type_sub_query_from_clause = self.get_from_clause("2")
 
+        if type_sub_query_where_clause != "":
+            type_sub_query_where_clause = " Where " + type_sub_query_where_clause
+
         typeQuery = "SELECT " + \
             type_ + "(" + entity + "2." + column + ") " + \
             " From " + \
             type_sub_query_from_clause + \
-            " Where " + \
             type_sub_query_where_clause
         if select_clause != "":
             select_clause = select_clause + ", "
+        if where_clause != "":
+            where_clause = where_clause + " and "
         self.query = "SELECT " + \
             select_clause + entity + "1." + column + " " + \
             " From " + \
             from_clause + \
             " Where " + \
-            where_clause + " and " + \
+            where_clause + \
             entity + "1." + column + " = (" + typeQuery + ")"
 
     def correlated_sub_query_in_select(self, 
@@ -149,21 +156,25 @@ class SQLGenerator(object):
         else:
             type_sub_query_where_clause = type_sub_query_where_clause + " and " + correlation
 
+        if type_sub_query_where_clause != "":
+            type_sub_query_where_clause = " Where " + type_sub_query_where_clause
+
         type_sub_query = "SELECT " + \
             type_ + "(" + entity + "2." + column + ") " + \
             " From " + \
             type_sub_query_from_clause + \
-            " Where " + \
             type_sub_query_where_clause
 
         if select_clause != "":
             select_clause = select_clause + ", "
 
+        if where_clause != "":
+            where_clause = " Where " + where_clause
+
         self.query = "SELECT distinct " + \
             select_clause + "(" + type_sub_query + ") as " + type_ + "_" + column + " " + \
             " From " + \
             from_clause + \
-            " Where " + \
             where_clause
 
 
@@ -193,11 +204,12 @@ class SQLGenerator(object):
             # where clause
             where_clause = self.get_where_clause("1")
 
+            if where_clause != "":
+                where_clause = " Where " + where_clause
             self.query = "SELECT distinct " + \
                 select_clause + " " + \
                 " From " + \
                 from_clause + \
-                " Where " + \
                 where_clause
 
     def find_select(self):

@@ -275,7 +275,8 @@ def process_sentence(sentence):
     print("=================================================================================")
     response = {}
     response['sql'] = sql_generator.query
-    response['result'] = result
+    response['result'] = result[0]
+    response['columns'] = result[1]
     return response
 
 
