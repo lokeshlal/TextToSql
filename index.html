@@ -20,7 +20,7 @@
             body
             {
                 margin: 0;
-                background-color: #ffd8d8;
+                background-color: #73c2fb;
             }
 
             .tb
@@ -50,9 +50,9 @@
                 width: 100%;
                 padding: 35px;
                 margin: -83px auto 0 auto;
-                background-color: #ff7575;
+                background-color: #0080ff;
                 border-radius: 20px;
-                box-shadow: 0 10px 40px #ff7c7c, 0 0 0 20px #ffffffeb;
+                box-shadow: 0 10px 40px #0080ff, 0 0 0 20px #ffffffeb;
                 transform: scale(0.6);
             }
 
@@ -71,7 +71,7 @@
 
             input[type="text"]::placeholder
             {
-                color: #e16868;
+                color: #ccc;
             }
 
             #s-cover
@@ -184,6 +184,22 @@
             #queries div {
                 cursor: pointer;
             }
+
+            table {
+                font-family: arial, sans-serif;
+                border-collapse: collapse;
+                width: 100%;
+            }
+
+            td, th {
+                border: 1px solid #dddddd;
+                text-align: left;
+                padding: 8px;
+            }
+
+            tr:nth-child(even) {
+               background-color: #718ab1a6;
+            }
         </style>
     </head>
     <body>
@@ -234,7 +250,7 @@
                         var json_response = JSON.parse(this.responseText);
                         var obj = json_response.result;
                         var obj_columns = json_response.columns;
-                        var tbl = "<strong>Query: </strong><i>" + document.getElementById('search').value + "</i><br/><br/>"
+                        var tbl = "<strong>Statement: </strong><i>" + document.getElementById('search').value + "</i><br/><br/>"
                         tbl += "<table>";
                         var tr_col="<tr>";
                         for(var i=0;i<obj_columns.length; i++) {

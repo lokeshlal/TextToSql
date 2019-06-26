@@ -41,6 +41,9 @@ class Configuration(metaclass=Singleton):
         with open(os.path.abspath(os.path.join(os.path.dirname(__file__), '..', 'models\\sql_scripts\\primary_keys.sql'))) as query:
             return query.read()
 
+    def get_synonyms(self):
+        return self.data["synonyms"]
+
     def get_entitites_to_load(self):
         return self.data["entities_to_load"]
     # sql ends

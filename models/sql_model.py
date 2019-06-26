@@ -386,6 +386,6 @@ class SQLGenerator(object):
         self.find_conditions()
         self.find_select()
         self.build_query()
-        print(self.query)
+        # print(self.query)
         return self.run_query()
 

@@ -10,7 +10,7 @@ from spacy.matcher import PhraseMatcher
 from models.columns import Columns
 from models.entities import Entities
 from models.db_model import DBModel
-from models.type_converter import get_value, get_token_child_len, get_neighbour_tokens, get_type
+from models.type_converter import get_value, get_token_child_len, get_neighbour_tokens, get_type, replace_string
 from models.sql_model import SQLGenerator
 from models.matcher import Matcher
 
@@ -81,7 +81,6 @@ def process_sentence(sentence):
 
     # stop word removal
     spacy_stopwords = spacy.lang.en.stop_words.STOP_WORDS
-    docLemmatized = nlp(lemmatizedSentence)
 
     # for chunk in docLemmatized.noun_chunks:
     #     print(chunk.text, chunk.root.text, chunk.root.dep_,
@@ -95,11 +94,15 @@ def process_sentence(sentence):
     for match in matches:
         if match[0].endswith("TABLE"):
             matched_entities.append(Entities(match[0].replace("_TABLE","")))
+            lemmatizedSentence = replace_string(lemmatizedSentence, str(match[1]), match[0].replace("_TABLE",""))
         if match[0].endswith("COLUMN"):
             columnType = [c.type_ for c in db_model.columns if c.name == match[0].replace("_COLUMN","").lower()]
             if len(columnType) > 0:
                 columnType = columnType[0]
             matched_columns.append(Columns(match[0].replace("_COLUMN",""), columnType))
+            lemmatizedSentence = replace_string(lemmatizedSentence, str(match[1]), match[0].replace("_COLUMN",""))
+
+    docLemmatized = nlp(lemmatizedSentence)
 
     # print("####################")
     # print(lemmatizedSentence)
@@ -270,9 +273,9 @@ def process_sentence(sentence):
     print("=================================================================================")
     result = sql_generator.get_sql()
     # print(sql_generator.query)
-    print("=================================================================================")
-    print(result)
-    print("=================================================================================")
+    # print("=================================================================================")
+    # print(result)
+    # print("=================================================================================")
     response = {}
     response['sql'] = sql_generator.query
     response['result'] = result[0]
@@ -284,7 +287,6 @@ app = flask.Flask(__name__)
 @app.route('/request', methods=['POST'])
 def home():
     content = flask.request.get_json()
-    print(content['sentence'])
     return flask.jsonify(process_sentence(content['sentence']))
 
 @app.route('/')

@@ -72,10 +72,20 @@ class DBModel(object):
             self.loaded_entities.append(entity_data)
         
         # load synonyms from declarative file
-        # column sysnonyms
-        self.synonyms_col.append(Synonyms("class", "standard"))
         # table sysnonyms
-        self.synonyms_tab.append(Synonyms("student", "children"))
+        for table_synonym in self.config.get_synonyms()["table"]:
+            orginal_val = table_synonym["original"]
+            synonyms_vals = table_synonym["synonyms"]
+            for synonyms_val in synonyms_vals:
+                self.synonyms_tab.append(Synonyms(orginal_val, synonyms_val))
+
+        # column sysnonyms
+        for column_synonym in self.config.get_synonyms()["column"]:
+            orginal_val = column_synonym["original"]
+            synonyms_vals = column_synonym["synonyms"]
+            for synonyms_val in synonyms_vals:
+                self.synonyms_col.append(Synonyms(orginal_val, synonyms_val))
+
 
         # make a single array
         self.columns = [column for entity in self.entities for column in entity.columns]
@@ -92,13 +102,13 @@ class DBModel(object):
         # add table synonyms to matcher
         for synonym in self.synonyms_tab:
             for entity in self.entities:
-                if synonym.column == entity.name:
+                if synonym.column.lower() == entity.name.lower():
                     matcher.add(entity.name.upper() + "_TABLE", None, nlp(synonym.synonym.lower()))        
 
         # add column synonyms to matcher
         for synonym in self.synonyms_col:
             for column in self.columns:
-                if synonym.column == column.name:
+                if synonym.column.lower() == column.name.lower():
                     matcher.add(column.name.upper() + "_COLUMN", None, nlp(synonym.synonym.lower()))        
                     
 
@@ -113,13 +123,13 @@ class DBModel(object):
         # add table synonyms to matcher
         for synonym in self.synonyms_tab:
             for entity in self.entities:
-                if synonym.column == entity.name:
+                if synonym.column.lower() == entity.name.lower():
                     matcher.add(entity.name.upper() + "_TABLE", nlp(synonym.synonym.lower()))        
 
         # add column synonyms to matcher
         for synonym in self.synonyms_col:
             for column in self.columns:
-                if synonym.column == column.name:
+                if synonym.column.lower() == column.name.lower():
                     matcher.add(column.name.upper() + "_COLUMN", nlp(synonym.synonym.lower()))        
                     
 

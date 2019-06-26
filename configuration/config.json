@@ -14,5 +14,19 @@
             "entity": "subject",
             "column": "name" 
         }
-    ]
+    ],
+    "synonyms": {
+        "column": [
+            {
+                "original": "class",
+                "synonyms": [ "standard" ]
+            }
+        ],
+        "table": [
+            {
+                "original": "student",
+                "synonyms": [ "children", "child" ]
+            }
+        ]
+    }
 }
