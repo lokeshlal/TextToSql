@@ -5,6 +5,10 @@ from models.entities import Entities
 from models.columns import Columns
 from models.relationships import Relationship
 from models.synonyms import Synonyms
+
+from spacy.lemmatizer import Lemmatizer
+from spacy.lang.en import LEMMA_INDEX, LEMMA_EXC, LEMMA_RULES
+
 class DBModel(object):
     def __init__(self):
         self.entities = []
@@ -16,6 +20,7 @@ class DBModel(object):
         self.loaded_entities = []
         self.config = Configuration()
         self.conn = pyodbc.connect(self.config.get_sql_connection_string())
+        self.lemmatizer = Lemmatizer(LEMMA_INDEX, LEMMA_EXC, LEMMA_RULES)
         self.load_db_model()
 
     def load_db_model(self):
@@ -69,6 +74,10 @@ class DBModel(object):
             entity_data = (entity_to_load["entity"], [])
             for row in cursor:
                 entity_data[1].append(row[0])
+                # add lemma strings
+                lemmas = self.lemmatizer(str(row[0]), u'NOUN')
+                for lemma in lemmas:
+                    entity_data[1].append(str(lemma))
             self.loaded_entities.append(entity_data)
         
         # load synonyms from declarative file

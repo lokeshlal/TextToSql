@@ -10,7 +10,7 @@ from spacy.matcher import PhraseMatcher
 from models.columns import Columns
 from models.entities import Entities
 from models.db_model import DBModel
-from models.type_converter import get_value, get_token_child_len, get_neighbour_tokens, get_type, replace_string
+from models.type_converter import get_value, get_token_child_len, get_neighbour_tokens, get_type, replace_string, replace_entities
 from models.sql_model import SQLGenerator
 from models.matcher import Matcher
 from configuration.config import Configuration
@@ -62,6 +62,11 @@ def process_sentence(sentence):
         if word not in stan_stop_words:
             new_sentence += word + " "
     sentence = new_sentence.lstrip()
+
+    for loaded_entity in db_model.loaded_entities:
+        for loaded_entity_value in loaded_entity[1]:
+            if loaded_entity_value.lower() in sentence:
+                sentence = replace_entities(sentence, loaded_entity_value, loaded_entity_value)
 
     # run nlp on sentence
     doc = nlp(sentence)
@@ -250,12 +255,12 @@ def process_sentence(sentence):
         entity_name = loaded_entity[0]
         for loaded_entity_value in loaded_entity[1]:
             if loaded_entity_value.lower() in lemmatizedSentence.lower():
-                if entity_name in [me.name.lower() for me in matched_entities]:
+                if entity_name.lower() in [me.name.lower() for me in matched_entities]:
                     # already exists
                     # no In operator support as of now
                     print("entity already processed")
                 else:
-                    en_def_col = next(col for en in db_model.entities if en.name.lower() == entity_name.lower() for col in en.columns if col.name.lower() == en.defaultColumn)
+                    en_def_col = next(col for en in db_model.entities if en.name.lower() == entity_name.lower() for col in en.columns if col.name.lower() == en.defaultColumn.lower())
                     if get_value(loaded_entity_value, en_def_col.type_) != "NoValue":
                         ent = Entities(entity_name.upper())
                         ent.condition = "="

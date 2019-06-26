@@ -33,6 +33,13 @@ def replace_string(phrase, original, replacement):
         phrase = phrase.replace(string_to_replace, new_replacement)
     return phrase
 
+def replace_entities(phrase, original, replacement):
+    result = phrase.lower().find(original.lower())
+    if result != -1:
+        string_to_replace = phrase[result:(result + len(original))]
+        phrase = phrase.replace(string_to_replace, replacement)
+    return phrase
+
 
 def get_token_child_len(token):
     children_length = len([child.text for child in token.children])

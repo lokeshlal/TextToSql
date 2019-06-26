@@ -4,6 +4,7 @@ import pyodbc
 from configuration.config import Configuration
 from models.columns import Columns
 
+
 class SQLGenerator(object):
     def __init__(self, entities, columns, db_model):
         self.columns = columns
