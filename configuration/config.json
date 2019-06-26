@@ -2,6 +2,7 @@
     "sql": {
         "connection_string":""
     },
+    "phrase_splitter": " in |in | in| and |and | and| with |with | with",
     "default_columns": {
         "entities": {
             "student":"name",

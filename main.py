@@ -13,7 +13,10 @@ from models.db_model import DBModel
 from models.type_converter import get_value, get_token_child_len, get_neighbour_tokens, get_type, replace_string
 from models.sql_model import SQLGenerator
 from models.matcher import Matcher
+from configuration.config import Configuration
 
+#load the configuration
+config = Configuration()
 # load the DB Model
 db_model = DBModel()
 # remove unneccesary words
@@ -120,7 +123,7 @@ def process_sentence(sentence):
             matched_entity = next(me for me in matched_entities if me.name == token.text.upper())
 
             contextual_span = get_neighbour_tokens(token)
-            span_ranges = re.split(" in |in | in| and |and | and| with |with | with", contextual_span)
+            span_ranges = re.split(config.get_phrase_splitter(), contextual_span)
             for span in span_ranges:
                 if matched_entity.name.lower() in span:
                     matched_entity.condition = "="
@@ -183,7 +186,7 @@ def process_sentence(sentence):
             matched_column = next(mc for mc in matched_columns if mc.name == token.text.upper())
 
             contextual_span = get_neighbour_tokens(token)
-            span_ranges = re.split(" in |in | in| and |and | and| with |with | with", contextual_span)
+            span_ranges = re.split(config.get_phrase_splitter(), contextual_span)
             for span in span_ranges:
                 # print("column : ", span)
                 if matched_column.name.lower() in span:

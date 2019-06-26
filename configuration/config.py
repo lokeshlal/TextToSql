@@ -44,6 +44,9 @@ class Configuration(metaclass=Singleton):
     def get_synonyms(self):
         return self.data["synonyms"]
 
+    def get_phrase_splitter(self):
+        return self.data["phrase_splitter"]
+
     def get_entitites_to_load(self):
         return self.data["entities_to_load"]
     # sql ends
