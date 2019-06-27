@@ -279,6 +279,61 @@ class SQLGenerator(object):
                         self.joins.append((join_entity, base_entity, rel.column1, rel.column2))
                 j = j + 1
             i = i + 1
+        
+        if len(self.joins) == 0 and len(self.entity_column_mapping) > 1:
+            # try to find the relationship using db model's entity_graph
+            i = 0
+            entities_mapped = []
+            while i < (len(self.entity_column_mapping) - 1):
+                base_entity = self.entity_column_mapping[i]
+                join_entity = self.entity_column_mapping[i + 1]
+                if base_entity[0] not in entities_mapped:
+                    entities_mapped.append(entities_mapped)
+                found, entities_mapped = self.find_entities_relationship(base_entity, join_entity, entities_mapped)
+                i = i + 1
+
+            i = 0
+            j = 0
+            while i < len(entities_mapped):
+                j = i + 1
+                base_entity = entities_mapped[i]
+                while j < len(entities_mapped):
+                    join_entity = entities_mapped[j]
+                    if len([rel for rel in self.db_model.relationships if ((rel.entity1 == base_entity and rel.entity2 == join_entity) or (rel.entity2 == base_entity and rel.entity1 == join_entity))]) == 1:
+                        rel = next(rel for rel in self.db_model.relationships if ((rel.entity1 == base_entity and rel.entity2 == join_entity) or (rel.entity2 == base_entity and rel.entity1 == join_entity)))
+
+                        if rel.entity1 == base_entity:
+                            self.joins.append((base_entity, join_entity, rel.column1, rel.column2))
+                        else:
+                            self.joins.append((join_entity, base_entity, rel.column1, rel.column2))
+                    j = j + 1
+                i = i + 1
+
+    def find_entities_relationship(self, base_entity, join_entity, entities_mapped):
+        
+        entities_to_be_included = copy.copy(entities_mapped)
+        found = False
+        base_entity_graph = next(eg for eg in self.db_model.entity_graph if eg[0].lower() == base_entity[0].lower())
+        for child_entity_in_graph in base_entity_graph[1]:
+            if child_entity_in_graph == join_entity[0]:
+                entities_to_be_included.append(child_entity_in_graph)
+                found = True
+                break;
+            child_entity_graph = next(eg for eg in self.db_model.entity_graph if eg[0].lower() == child_entity_in_graph.lower())
+            entities_to_be_included_temp = copy.copy(entities_to_be_included)
+            if child_entity_in_graph not in entities_to_be_included_temp:
+                entities_to_be_included_temp.append(child_entity_in_graph)
+                found, entities_to_be_included = self.find_entities_relationship(child_entity_graph, join_entity, entities_to_be_included_temp)
+            if found:
+                break;
+            
+        if found:
+            for entity_to_be_included in entities_to_be_included:
+                if entity_to_be_included not in entities_mapped:
+                    entities_mapped.append(entity_to_be_included)
+        
+        return (found, entities_to_be_included)
+
 
     def find_column(self, column, entityName):
         column_parent_entity_found = False
@@ -347,6 +402,11 @@ class SQLGenerator(object):
                     copy_default_column = copy.copy(default_column)  
                     copy_default_column.condition = entity.condition
                     copy_default_column.value_ = entity.value_                    
+                    copy_default_column.isSum = entity.isSum                    
+                    copy_default_column.isAverage = entity.isAverage                    
+                    copy_default_column.isCount = entity.isCount                    
+                    copy_default_column.isMin = entity.isMin                    
+                    copy_default_column.isMax = entity.isMax                    
 
                     if len([ecm for ecm in self.entity_column_mapping if ecm[0].lower() == model_name.lower()]) == 1:
                         ecm = next(ecm for ecm in self.entity_column_mapping if ecm[0].lower() == model_name.lower())
@@ -356,6 +416,21 @@ class SQLGenerator(object):
                 else:
                     if len([ecm for ecm in self.entity_column_mapping if ecm[0].lower() == entity.name.lower()]) == 0:
                         self.entity_column_mapping.append((entity.name.lower(), []))
+                    else:
+                        ecm = next(ecm for ecm in self.entity_column_mapping if ecm[0].lower() == entity.name.lower())
+
+                        ent = next(en for en in self.db_model.entities if en.name.lower() == entity.name.lower())
+                        default_column = next(col for col in ent.columns if col.name.lower() == ent.defaultColumn.lower())
+                        copy_default_column = copy.copy(default_column)  
+                        copy_default_column.condition = entity.condition
+                        copy_default_column.value_ = entity.value_                    
+                        copy_default_column.isSum = entity.isSum                    
+                        copy_default_column.isAverage = entity.isAverage                    
+                        copy_default_column.isCount = entity.isCount                    
+                        copy_default_column.isMin = entity.isMin                    
+                        copy_default_column.isMax = entity.isMax 
+                        ecm[1].append(copy_default_column)                   
+                        
         elif len(self.columns) > 0:
             # No entities identified in the phrase
             # Finding...entities as per the columns identified in the phrase
@@ -387,6 +462,6 @@ class SQLGenerator(object):
         self.find_conditions()
         self.find_select()
         self.build_query()
-        # print(self.query)
+        print(self.query)
         return self.run_query()
 

@@ -159,7 +159,9 @@ def process_sentence(sentence):
                         .replace("less than", "") \
                         .replace("more than", "") \
                         .replace("min", "") \
-                        .replace("max", "")
+                        .replace("max", "") \
+                        .replace("count", "") \
+                        .replace("sum", "")
                     trimmed_span = ' '.join(trimmed_span.split())
                     doc_span = nlp(trimmed_span)
 
@@ -229,7 +231,9 @@ def process_sentence(sentence):
                         .replace("less than", "") \
                         .replace("more than", "") \
                         .replace("min", "") \
-                        .replace("max", "")
+                        .replace("max", "") \
+                        .replace("count", "") \
+                        .replace("sum", "")
                     trimmed_span = ' '.join(trimmed_span.split())
                     
                     doc_span = nlp(trimmed_span)
@@ -271,9 +275,9 @@ def process_sentence(sentence):
     # now next is to build the SQL query generator
     # matched entities
     # print("####################")
-    # print("\n".join([(mc.name + " -- " + str(mc.value_) + " -- " + " condition : " + str(mc.condition) + " -- " + " isMax : " + str(mc.isMax) + " -- " + " isMin : " + str(mc.isMin) + " -- " + " isAverage : " + str(mc.isAverage)) for mc in matched_entities]))
+    # print("\n".join([(mc.name + " -- " + str(mc.value_) + " -- " + " condition : " + str(mc.condition) + " -- " + " isMax : " + str(mc.isMax) + " -- " + " isMin : " + str(mc.isMin) + " -- " + " isAverage : " + str(mc.isAverage) + " -- " + " isSum : " + str(mc.isSum) + " -- " + " isCount : " + str(mc.isCount)) for mc in matched_entities]))
     # print("####################")
-    # # matched columns
+    # matched columns
     # print("\n".join([(mc.name + " -- " + str(mc.value_) + " -- " + " condition : " + str(mc.condition) + " -- " + " isMax : " + str(mc.isMax) + " -- " + " isMin : " + str(mc.isMin) + " -- " + " isAverage : " + str(mc.isAverage)) for mc in matched_columns]))
     # print("####################")
 
