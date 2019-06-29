@@ -84,12 +84,11 @@ python -B maini.py
 Go to browser and launch http://127.0.0.1:5000/
 
 ### Schema tested on
-Tested on basic schema  
-[a link](https://github.com/lokeshlal/TextToSql/blob/master/sql_scripts/sql_schema.sql)
+Tested on [test schema](https://github.com/lokeshlal/TextToSql/blob/master/sql_scripts/sql_schema.sql)
 
 The schema basically consists of three tables Student, Subject and student_mark with relationship among them.
 
-Test data is populated using [a link](https://github.com/lokeshlal/TextToSql/blob/master/sql_scripts/data_feed.sql)
+Test data is populated using [data feed](https://github.com/lokeshlal/TextToSql/blob/master/sql_scripts/data_feed.sql)
 
 Queries which are tested on the above schema
 
