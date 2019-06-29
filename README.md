@@ -82,3 +82,35 @@ python -B maini.py
 ```
 
 Go to browser and launch http://127.0.0.1:5000/
+
+### Schema tested on
+Tested on basic schema  
+[a link](https://github.com/lokeshlal/TextToSql/blob/master/sql_scripts/sql_schema.sql)
+
+The schema basically consists of three tables Student, Subject and student_mark with relationship among them.
+
+Test data is populated using [a link](https://github.com/lokeshlal/TextToSql/blob/master/sql_scripts/data_feed.sql)
+
+Queries which are tested on the above schema
+
+```
+students in class 12 and mark 30 in english subject
+Show all students with marks greater than 30
+students in class 12 and marks less than 50 in english subject in year greater than 2018
+students in class 12 and marks less than 50 in english subject
+average marks of students in english subject in class 12
+average marks in english subject in class 12
+student with maximum marks in english subject in class 12
+minimum marks in english subject in class 12
+total marks of students in class 12 in year 2019
+students in class 12 with marks less than 60 in english subject
+total marks in class 12 in year 2019
+maximum marks in class 12 in year 2019
+students in class 12 and 69 marks in english subject
+students in class 12 and marks less than 50 in english subject
+marks of Manoj Garg student in english subject
+student with biology in class 12
+marks of Lokesh Lal in english in class 12
+maximum marks of vishal gupta in all subject
+students with less than 50 marks in class 12
+```
