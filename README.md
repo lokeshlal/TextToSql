@@ -23,14 +23,61 @@ Input text -> Text processing will entirely depends upon the targeted domain or 
     Push the query to database and fetch the result
 ```
 
-### How to make this library works
+### Configuration
 Important part to focus here is configuration
 
-### What all this library supports as of now
+```
+{
+    "sql": {
+        "connection_string":""
+    },
+    "phrase_splitter": " in |in | in| and |and | and| with |with | with",
+    "default_columns": {
+        "entities": {
+            "student":"name",
+            "subject":"name",
+            "student_mark":"id"
+        }
+    },
+    "entities_to_load": [
+        {
+            "entity": "subject",
+            "column": "name" 
+        },
+        {
+            "entity": "student",
+            "column": "name" 
+        }
+    ],
+    "synonyms": {
+        "column": [
+            {
+                "original": "class",
+                "synonyms": [ "standard" ]
+            }
+        ],
+        "table": [
+            {
+                "original": "student",
+                "synonyms": [ "children", "child" ]
+            }
+        ]
+    }
+}
+```
+**connection_string**: connection string for the sql server
+**phrase_splitter**: phrase splitter for the domain. Customer should know what sort of queries user generally ask and how these can be splitted
+**default_columns**: define default columns for the tables. this will be helpful to identify the default column to select when entity is mentioned in the question
+**entities_to_load**: which all entities to pre-load. These entities should refer to the master data or data which needs to be looked up without any context
+**synonyms**: synonyms for table names and column names
 
+### What all is supported as of now
+Following SQL functions - min, max, avg, sum, count
 
-### References
+### How to run
 
+```
+python -B maini.py
+```
 
-### Connect
-
+Go to browser and launch http://127.0.0.1:5000/
