@@ -78,7 +78,7 @@ Following SQL functions - min, max, avg, sum, count
 ### How to run
 
 ```
-python -B maini.py
+python -B main.py
 ```
 
 Go to browser and launch http://127.0.0.1:5000/
