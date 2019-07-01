@@ -117,3 +117,12 @@ students with less than 50 marks in class 12
 ### Video
 
 [![Video](https://img.youtube.com/vi/h8J-u_51ADw/0.jpg)](https://www.youtube.com/watch?v=h8J-u_51ADw)
+
+
+### Things to do
+
+Define a process to incoperate the ML based learning for various scenarios. 
+
+For example, "students with average marks less than average marks".
+
+In the above query, we have to find all students with average marks less than the average marks of all students. This can be coded as well. However, there could be many scenarios and based on these scenarios we might not want to change the sql adaptor every time. So best is to leverage the ML model to enhance the dictionary which is being passed to the SQL adaptor and let SQL adaptor build the SQL based on the available sql functions.
