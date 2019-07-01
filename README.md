@@ -73,7 +73,9 @@ Important part to focus here is configuration
 **synonyms**: synonyms for table names and column names  
 
 ### What all is supported as of now
+Only sql server is supported as of now.
 Following SQL functions - min, max, avg, sum, count
+Multiple values for a filter is not supported.
 
 ### How to run
 
