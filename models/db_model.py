@@ -7,7 +7,8 @@ from models.relationships import Relationship
 from models.synonyms import Synonyms
 
 from spacy.lemmatizer import Lemmatizer
-from spacy.lang.en import LEMMA_INDEX, LEMMA_EXC, LEMMA_RULES
+from spacy.lookups import Lookups
+
 
 class DBModel(object):
     def __init__(self):
@@ -20,7 +21,8 @@ class DBModel(object):
         self.loaded_entities = []
         self.config = Configuration()
         self.conn = pyodbc.connect(self.config.get_sql_connection_string())
-        self.lemmatizer = Lemmatizer(LEMMA_INDEX, LEMMA_EXC, LEMMA_RULES)
+        lookups = Lookups()
+        self.lemmatizer = Lemmatizer(lookups)
         self.load_db_model()
 
     def load_db_model(self):
@@ -143,5 +145,3 @@ class DBModel(object):
                     
 
         return matcher
-
-        

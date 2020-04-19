@@ -1,6 +1,7 @@
 import json
 import os
 
+
 class Singleton(type):
     """
     Define an Instance operation that lets clients access its unique
@@ -16,9 +17,10 @@ class Singleton(type):
             cls._instance = super().__call__(*args, **kwargs)
         return cls._instance
 
+
 class Configuration(metaclass=Singleton):
     def __init__(self):
-        with open(os.path.dirname(__file__) + '\\config.json') as json_configuration:
+        with open(os.path.join(os.path.dirname(__file__), 'config.json')) as json_configuration:
             self.data = json.load(json_configuration)
 
     # sql starts
@@ -26,19 +28,23 @@ class Configuration(metaclass=Singleton):
         return self.data["sql"]["connection_string"]
 
     def get_tables_sql_query(self):
-        with open(os.path.abspath(os.path.join(os.path.dirname(__file__),'..','models\\sql_scripts\\tables.sql'))) as query:
+        with open(os.path.abspath(
+                os.path.join(os.path.dirname(__file__), '..', 'models', 'sql_scripts', 'tables.sql'))) as query:
             return query.read()
 
     def get_columns_sql_query(self):
-        with open(os.path.abspath(os.path.join(os.path.dirname(__file__), '..', 'models\\sql_scripts\\columns.sql'))) as query:
+        with open(os.path.abspath(
+                os.path.join(os.path.dirname(__file__), '..', 'models', 'sql_scripts', 'columns.sql'))) as query:
             return query.read()
 
     def get_FK_sql_query(self):
-        with open(os.path.abspath(os.path.join(os.path.dirname(__file__), '..', 'models\\sql_scripts\\foreign_keys.sql'))) as query:
+        with open(os.path.abspath(
+                os.path.join(os.path.dirname(__file__), '..', 'models', 'sql_scripts', 'foreign_keys.sql'))) as query:
             return query.read()
 
     def get_PK_sql_query(self):
-        with open(os.path.abspath(os.path.join(os.path.dirname(__file__), '..', 'models\\sql_scripts\\primary_keys.sql'))) as query:
+        with open(os.path.abspath(
+                os.path.join(os.path.dirname(__file__), '..', 'models', 'sql_scripts', 'primary_keys.sql'))) as query:
             return query.read()
 
     def get_synonyms(self):
@@ -49,7 +55,8 @@ class Configuration(metaclass=Singleton):
 
     def get_entitites_to_load(self):
         return self.data["entities_to_load"]
+
     # sql ends
-    
+
     def get_default_column(self, table_name):
         return self.data["default_columns"]["entities"][table_name]

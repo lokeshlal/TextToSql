@@ -1,6 +1,6 @@
 {
     "sql": {
-        "connection_string":""
+        "connection_string":"DRIVER={ODBC Driver 17 for SQL Server};SERVER=tcp:texttosql.database.windows.net;DATABASE=texttosql;UID=texttosql;PWD=Passw0rd;"
     },
     "phrase_splitter": " in |in | in| and |and | and| with |with | with| of |of | of",
     "default_columns": {

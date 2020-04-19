@@ -85,6 +85,10 @@ python -B main.py
 
 Go to browser and launch http://127.0.0.1:5000/
 
+#### Install pyodbc driver from following link
+https://docs.microsoft.com/en-us/sql/connect/odbc/linux-mac/installing-the-microsoft-odbc-driver-for-sql-server?view=sql-server-ver15
+
+
 ### Schema tested on
 Tested on [test schema](https://github.com/lokeshlal/TextToSql/blob/master/sql_scripts/sql_schema.sql)
 

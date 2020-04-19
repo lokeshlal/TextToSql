@@ -1,0 +1,3 @@
+pyodbc
+spacy
+flask
