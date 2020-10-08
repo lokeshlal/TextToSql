@@ -1,0 +1,20 @@
+Hello sir ,
+I need a help for TextToSql to complete mini project for my college 
+i just installed the pyodbc driver and trying to run the main file but
+before running that i need to create database with table where m confused 
+so file is showing some error
+
+"""
+
+C:\Users\psyco\Downloads\TextToSql-master\TextToSql-master>python -B main.py
+Traceback (most recent call last):
+  File "main.py", line 21, in <module>
+    db_model = DBModel()
+  File "C:\Users\psyco\Downloads\TextToSql-master\TextToSql-master\models\db_model.py", line 23, in __init__
+    self.conn = pyodbc.connect(self.config.get_sql_connection_string())
+pyodbc.InterfaceError: ('IM002', '[IM002] [Microsoft][ODBC Driver Manager] Data source name not found and no default driver specified (0) (SQLDriverConnect)')
+
+"""
+
+
+kindly help me with this...
